@@ -1,0 +1,11 @@
+Biostars where I talk about the different library types: https://www.biostars.org/p/344264/#345038
+BUSCOv3 tool we must use to predict gene into fasta file  : https://busco.ezlab.org
+infer_experiment.py the only tool already existing. But it needs a reference annotation and the result is quite poor.: http://rseqc.sourceforge.net/#infer-experiment-py
+EMBLmyGFF3 an example of python tool developed recently: https://github.com/NBISweden/EMBLmyGFF3
+Conda - package manager: https://bioconda.github.io/index.html
+Snakemake - The pipeline framework: https://bioconda.github.io/index.html
+
+The idea is to install all you need using the package manager Bioconda (Busco, a mapper, a de-novo transcriptome assembler, snakemake ? )
+Then if you use snakemake, creating rules for the different steps of your pipeline.
+
+And here the example data you could start with from fly (chr4): https://www.dropbox.com/sh/9opmrtqg7544uxz/AABT67p3Ui09jXweIuDisQYIa?dl=0
