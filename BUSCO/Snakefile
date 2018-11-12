@@ -3,13 +3,14 @@
 # Change to transcriptome by adding --config mode=transcriptome
 # Parameters can be changed by changing config.json
 
- 
+
 configfile: "config.json"
 mode = config["mode"]
+lineage = config["lineage"]
 rule busco_ann:
     input:
-        "Data/{sample}.fa"
+        "../Data/{sample}.fa"
     output:
         directory("run_{sample}")
     shell:
-        "python ~/miniconda3/bin/run_BUSCO.py -i {input} -l /home/hampus/miniconda3/pkgs/busco-3.0.2-py36_8/eukaryota_odb9/ -o {wildcards.sample} -m {mode}"
+        "python ~/miniconda3/bin/run_BUSCO.py -i {input} -l {lineage} -o {wildcards.sample} -m {mode}"
