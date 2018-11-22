@@ -1,0 +1,20 @@
+configfile: "config.yaml"
+
+rule all:
+    input:
+        "data/trinity_out_dir/Trinity.fasta"
+
+rule trinity:
+    input:
+        left="data/ERR305399.left.fastq.gz",
+        right="data/ERR305399.right.fastq.gz"
+    output:
+        "data/trinity_out_dir/Trinity.fasta"
+    log:
+        'data/logs/trinity.log'
+    params:
+        memory= config["trinity_params"]["memory"],
+        outdir="data/trinity_out_dir/"
+    threads: 4
+    shell:
+         "Trinity --seqType fq --max_memory {params.memory} --left {input.left}  --right {input.right} --CPU {threads} --output {params.outdir}"
