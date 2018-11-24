@@ -1,0 +1,30 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	all
+	1	trinity
+	2
+
+rule trinity:
+    input: reduced_data/4_mapped_r1.fastq.gz, reduced_data/4_mapped_r2.fastq.gz
+    output: trinity_out_dir/Trinity.fasta
+    log: logs/trinity.log
+    jobid: 1
+
+Error in rule trinity:
+    jobid: 1
+    output: trinity_out_dir/Trinity.fasta
+    log: logs/trinity.log
+
+RuleException:
+CalledProcessError in line 20 of /domus/h1/caithaug/BioProject/trinity_reduced_dataset/Snakefile:
+Command ' set -euo pipefail;  Trinity --seqType fq --max_memory 10G --left reduced_data/4_mapped_r1.fastq.gz  --right reduced_data/4_mapped_r2.fastq.gz --CPU 1 --output trinity_out_dir/ ' returned non-zero exit status 2.
+  File "/domus/h1/caithaug/BioProject/trinity_reduced_dataset/Snakefile", line 20, in __rule_trinity
+  File "/sw/comp/python/3.6.0_rackham/lib/python3.6/concurrent/futures/thread.py", line 55, in run
+Will exit after finishing currently running jobs.
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: /domus/h1/caithaug/BioProject/trinity_reduced_dataset/.snakemake/log/2018-11-23T114011.669526.snakemake.log
