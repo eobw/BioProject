@@ -1,0 +1,8 @@
+{
+  "bowtie2":{
+      "reference":"data/reference/4.fa",
+      "reads":{
+        "paired":["data/reads/4_mapped_r1.fastq.gz","data/reads/4_mapped_r2.fastq.gz"],
+        "single":"data/reads/4_mapped_r1.fastq.gz"}
+  }
+}

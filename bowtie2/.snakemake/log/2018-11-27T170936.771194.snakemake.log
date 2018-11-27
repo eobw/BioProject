@@ -1,0 +1,18 @@
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	all
+	1
+
+[Tue Nov 27 17:09:36 2018]
+localrule all:
+    input: data/mapping/4_mapped.bam
+    jobid: 0
+
+[Tue Nov 27 17:09:36 2018]
+Finished job 0.
+1 of 1 steps (100%) done
+Complete log: /mnt/c/Users/erik_/Documents/GitHub/BioProject/bowtie2/.snakemake/log/2018-11-27T170936.771194.snakemake.log

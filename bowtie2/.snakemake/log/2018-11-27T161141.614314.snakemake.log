@@ -1,0 +1,4 @@
+Building DAG of jobs...
+WildcardError in line 26 of /mnt/c/Users/erik_/Documents/GitHub/BioProject/bowtie2/Snakefile:
+Wildcards in input files cannot be determined from output files:
+'reference'

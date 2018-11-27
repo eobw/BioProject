@@ -1,0 +1,5 @@
+Building DAG of jobs...
+InputFunctionException in line 15 of /mnt/c/Users/erik_/Documents/GitHub/BioProject/bowtie2/Snakefile:
+TypeError: string indices must be integers
+Wildcards:
+reference=4

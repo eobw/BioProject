@@ -1,0 +1,40 @@
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	all
+	1	bowtie2_index
+	1	bowtie2_map
+	3
+
+[Tue Nov 27 19:13:31 2018]
+rule bowtie2_index:
+    input: data/reference/4.fa
+    output: data/index4.1.bt2, data/index4.2.bt2, data/index4.3.bt2, data/index4.4.bt2, data/index4.rev.1.bt2, data/index4.rev.2.bt2
+    jobid: 2
+
+[Tue Nov 27 19:13:33 2018]
+Finished job 2.
+1 of 3 steps (33%) done
+
+[Tue Nov 27 19:13:33 2018]
+rule bowtie2_map:
+    input: data/index4.1.bt2, data/index4.2.bt2, data/index4.3.bt2, data/index4.4.bt2, data/index4.rev.1.bt2, data/index4.rev.2.bt2, data/reads/4_mapped_r1.fastq.gz, data/reads/4_mapped_r2.fastq.gz
+    output: data/mapping/4_mapped.bam
+    jobid: 1
+
+[Tue Nov 27 19:13:44 2018]
+Finished job 1.
+2 of 3 steps (67%) done
+
+[Tue Nov 27 19:13:44 2018]
+localrule all:
+    input: data/mapping/4_mapped.bam
+    jobid: 0
+
+[Tue Nov 27 19:13:44 2018]
+Finished job 0.
+3 of 3 steps (100%) done
+Complete log: /mnt/c/Users/erik_/Documents/GitHub/BioProject/bowtie2/.snakemake/log/2018-11-27T191330.977404.snakemake.log

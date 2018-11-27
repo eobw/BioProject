@@ -5,29 +5,39 @@
 
 # Need to create config file and make script more general.
 
+import re
+configfile: "config.json"
+
+
+
+rule all:
+    input:
+        "data/mapping/4_mapped.bam"
+
+# path to index file without extension
+index_basename="data/index"+re.split('/|\.',config["bowtie2"]["reference"])[-2]
+
 rule bowtie2_index:
     input:
-        "data/reference/4.fa"
+        config["bowtie2"]["reference"]
     output:
-        expand("data/index/4.{index}.bt2", index=range(1,5)),
-        expand("data/index/4.rev.{index}.bt2", index=range(1,3))
-    params:
-        prefix="data/index/4"
+        expand(index_basename+".{index}.bt2", index=range(1,5)),
+        expand(index_basename+".rev.{index}.bt2", index=range(1,3))
     run:
-        shell("bowtie2-build {input} {params.prefix}")
+        shell("bowtie2-build {input} "+index_basename)
 
 rule bowtie2_map:
     input:
         # Indexed files
-        expand("data/index/4.{index}.bt2", index=range(1,5)),
-        expand("data/index/4.rev.{index}.bt2", index=range(1,3)),
+        expand(index_basename+".{index}.bt2", index=range(1,5)),
+        expand(index_basename+".rev.{index}.bt2", index=range(1,3)),
         # Read files
-        left="data/reads/4_mapped_r1.fastq.gz",
-        right="data/reads/4_mapped_r2.fastq.gz"
+        left=config["bowtie2"]["reads"]["paired"][0],
+        right=config["bowtie2"]["reads"]["paired"][1]
     output:
         "data/mapping/4_mapped.bam"
     params:
-        ref_idx_base="data/index/4"
+        ref_idx_base=index_basename
     threads: 4 # for my laptop
     #shell: # need to add more different params here that changes according to config-file.
     #    "bowtie2 -x {params.ref_idx_base} -1 {input.left} -2 {input.right} | samtools view -bS - > {output}"

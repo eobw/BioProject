@@ -1,0 +1,4 @@
+Building DAG of jobs...
+MissingInputException in line 11 of /mnt/c/Users/erik_/Documents/GitHub/BioProject/bowtie2/Snakefile:
+Missing input files for rule all:
+data/mapping/4_mapped.bam

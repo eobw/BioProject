@@ -1,0 +1,3 @@
+NameError in line 30 of /mnt/c/Users/erik_/Documents/GitHub/BioProject/bowtie2/Snakefile:
+name 'refname' is not defined
+  File "/mnt/c/Users/erik_/Documents/GitHub/BioProject/bowtie2/Snakefile", line 30, in <module>
