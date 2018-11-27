@@ -1,0 +1,35 @@
+# Need samtools and bowtie2 in path to work.
+# Execute with command: snakemake ./data/mapping/4_mapped.bam
+
+# Inspo: https://github.com/EnvGen/snakemake-workflows/blob/master/bio/ngs/rules/mapping/bowtie2.rules
+
+# Need to create config file and make script more general.
+
+rule bowtie2_index:
+    input:
+        "data/reference/4.fa"
+    output:
+        expand("data/index/4.{index}.bt2", index=range(1,5)),
+        expand("data/index/4.rev.{index}.bt2", index=range(1,3))
+    params:
+        prefix="data/index/4"
+    run:
+        shell("bowtie2-build {input} {params.prefix}")
+
+rule bowtie2_map:
+    input:
+        # Indexed files
+        expand("data/index/4.{index}.bt2", index=range(1,5)),
+        expand("data/index/4.rev.{index}.bt2", index=range(1,3)),
+        # Read files
+        left="data/reads/4_mapped_r1.fastq.gz",
+        right="data/reads/4_mapped_r2.fastq.gz"
+    output:
+        "data/mapping/4_mapped.bam"
+    params:
+        ref_idx_base="data/index/4"
+    threads: 4 # for my laptop
+    #shell: # need to add more different params here that changes according to config-file.
+    #    "bowtie2 -x {params.ref_idx_base} -1 {input.left} -2 {input.right} | samtools view -bS - > {output}"
+    run: # need to add more different params here that changes according to config-file.
+        shell("bowtie2 -x {params.ref_idx_base} -1 {input.left} -2 {input.right} | samtools view -bS - > {output}")

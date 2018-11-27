@@ -1,0 +1,207 @@
+The variable CONDA_ENVS_PATH contains the location of your environments. Set it to your project's environments folder if you have one.
+Otherwise, the default is ~/.conda/envs. Remember to export the variable with export CONDA_ENVS_PATH=/proj/...
+
+REMEMBER TO USE 'conda clean -a' once in a while
+
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	all
+	1	trinity
+	2
+
+rule trinity:
+    input: reduced_data/4_mapped_r1.fastq, reduced_data/4_mapped_r2.fastq
+    output: trinity_out_dir/Trinity.fasta
+    log: logs/trinity.log
+    jobid: 1
+
+Left read files: $VAR1 = [
+          'reduced_data/4_mapped_r1.fastq'
+        ];
+Right read files: $VAR1 = [
+          'reduced_data/4_mapped_r2.fastq'
+        ];
+Trinity version: Trinity-v2.4.0
+** NOTE: Latest version of Trinity is Trinity-v2.8.4, and can be obtained at:
+	https://github.com/trinityrnaseq/trinityrnaseq/releases
+
+Friday, November 23, 2018: 16:22:10	CMD: java -Xmx64m -XX:ParallelGCThreads=2 -jar /sw/apps/bioinfo/trinity/2.4.0/rackham/util/support_scripts/ExitTester.jar 0
+Friday, November 23, 2018: 16:22:10	CMD: java -Xmx64m -XX:ParallelGCThreads=2 -jar /sw/apps/bioinfo/trinity/2.4.0/rackham/util/support_scripts/ExitTester.jar 1
+
+
+----------------------------------------------------------------------------------
+-------------- Trinity Phase 1: Clustering of RNA-Seq Reads  ---------------------
+----------------------------------------------------------------------------------
+
+---------------------------------------------------------------
+------------ In silico Read Normalization ---------------------
+-- (Removing Excess Reads Beyond 50 Coverage --
+---------------------------------------------------------------
+
+# running normalization on reads: $VAR1 = [
+          [
+            '/domus/h1/caithaug/BioProject/trinity_reduced_dataset/reduced_data/4_mapped_r1.fastq'
+          ],
+          [
+            '/domus/h1/caithaug/BioProject/trinity_reduced_dataset/reduced_data/4_mapped_r2.fastq'
+          ]
+        ];
+
+
+Friday, November 23, 2018: 16:22:10	CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/util/insilico_read_normalization.pl --seqType fq --JM 10G  --max_cov 50 --CPU 1 --output /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/insilico_read_normalization   --max_pct_stdev 10000  --left /domus/h1/caithaug/BioProject/trinity_reduced_dataset/reduced_data/4_mapped_r1.fastq --right /domus/h1/caithaug/BioProject/trinity_reduced_dataset/reduced_data/4_mapped_r2.fastq --pairs_together --PARALLEL_STATS  
+Converting input files. (both directions in parallel)CMD: seqtk-trinity seq -A /domus/h1/caithaug/BioProject/trinity_reduced_dataset/reduced_data/4_mapped_r1.fastq >> left.fa
+CMD: seqtk-trinity seq -A /domus/h1/caithaug/BioProject/trinity_reduced_dataset/reduced_data/4_mapped_r2.fastq >> right.fa
+CMD finished (0 seconds)
+CMD finished (0 seconds)
+CMD: touch left.fa.ok
+CMD finished (0 seconds)
+CMD: touch right.fa.ok
+CMD finished (0 seconds)
+Done converting input files.CMD: cat left.fa right.fa > both.fa
+CMD finished (0 seconds)
+CMD: touch both.fa.ok
+-------------------------------------------
+----------- Jellyfish  --------------------
+-- (building a k-mer catalog from reads) --
+-------------------------------------------
+
+CMD finished (0 seconds)
+CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/util/..//Inchworm/bin/fastaToKmerCoverageStats --reads right.fa --kmers jellyfish.K25.min2.kmers.fa --kmer_size 25  --num_threads 1  --DS  > right.fa.K25.stats
+CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/util/..//Inchworm/bin/fastaToKmerCoverageStats --reads left.fa --kmers jellyfish.K25.min2.kmers.fa --kmer_size 25  --num_threads 1  --DS  > left.fa.K25.stats
+-reading Kmer occurrences...
+-reading Kmer occurrences...
+
+ done parsing 0 Kmers, 0 added, taking 0 seconds.
+
+ done parsing 0 Kmers, 0 added, taking 0 seconds.
+STATS_GENERATION_TIME: 2 seconds.
+CMD finished (2 seconds)
+STATS_GENERATION_TIME: 2 seconds.
+CMD finished (2 seconds)
+CMD: touch left.fa.K25.stats.ok
+CMD finished (0 seconds)
+CMD: touch right.fa.K25.stats.ok
+-sorting each stats file by read name.
+CMD finished (0 seconds)
+CMD: /usr/bin/sort --parallel=1 -k5,5 -T . -S 5G right.fa.K25.stats > right.fa.K25.stats.sort
+CMD: /usr/bin/sort --parallel=1 -k5,5 -T . -S 5G left.fa.K25.stats > left.fa.K25.stats.sort
+CMD finished (0 seconds)
+CMD finished (0 seconds)
+CMD: touch left.fa.K25.stats.sort.ok
+CMD finished (0 seconds)
+CMD: touch right.fa.K25.stats.sort.ok
+CMD finished (0 seconds)
+CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/util/..//util/support_scripts//nbkc_merge_left_right_stats.pl --left left.fa.K25.stats.sort --right right.fa.K25.stats.sort --sorted > pairs.K25.stats
+-opening left.fa.K25.stats.sort
+-opening right.fa.K25.stats.sort
+-done opening files.
+CMD finished (0 seconds)
+CMD: touch pairs.K25.stats.ok
+CMD finished (0 seconds)
+CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/util/..//util/support_scripts//nbkc_normalize.pl pairs.K25.stats 50 10000 > pairs.K25.stats.C50.pctSD10000.accs
+62308 / 62308 = 100.00% reads selected during normalization.
+0 / 62308 = 0.00% reads discarded as likely aberrant based on coverage profiles.
+0 / 62308 = 0.00% reads missing kmer coverage (N chars included?).
+CMD finished (0 seconds)
+CMD: touch pairs.K25.stats.C50.pctSD10000.accs.ok
+CMD finished (0 seconds)
+CMD: touch /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/insilico_read_normalization/4_mapped_r1.fastq.normalized_K25_C50_pctSD10000.fq.ok
+CMD finished (0 seconds)
+CMD: touch /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/insilico_read_normalization/4_mapped_r2.fastq.normalized_K25_C50_pctSD10000.fq.ok
+CMD finished (0 seconds)
+CMD: ln -sf /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/insilico_read_normalization/4_mapped_r1.fastq.normalized_K25_C50_pctSD10000.fq left.norm.fq
+CMD finished (0 seconds)
+CMD: ln -sf /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/insilico_read_normalization/4_mapped_r2.fastq.normalized_K25_C50_pctSD10000.fq right.norm.fq
+CMD finished (1 seconds)
+
+
+Normalization complete. See outputs: 
+	/domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/insilico_read_normalization/4_mapped_r1.fastq.normalized_K25_C50_pctSD10000.fq
+	/domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/insilico_read_normalization/4_mapped_r2.fastq.normalized_K25_C50_pctSD10000.fq
+Friday, November 23, 2018: 16:22:14	CMD: touch /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/insilico_read_normalization/normalization.ok
+Converting input files. (in parallel)Friday, November 23, 2018: 16:22:14	CMD: cat /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/insilico_read_normalization/left.norm.fq | seqtk-trinity seq -A - >> left.fa
+Friday, November 23, 2018: 16:22:14	CMD: cat /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/insilico_read_normalization/right.norm.fq | seqtk-trinity seq -A - >> right.fa
+Friday, November 23, 2018: 16:22:14	CMD: touch right.fa.ok
+Friday, November 23, 2018: 16:22:14	CMD: touch left.fa.ok
+Friday, November 23, 2018: 16:22:14	CMD: touch left.fa.ok right.fa.ok
+Friday, November 23, 2018: 16:22:14	CMD: cat left.fa right.fa > /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/both.fa
+Friday, November 23, 2018: 16:22:14	CMD: touch /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/both.fa.ok
+-------------------------------------------
+----------- Jellyfish  --------------------
+-- (building a k-mer catalog from reads) --
+-------------------------------------------
+
+* Running CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/trinity-plugins/jellyfish/bin/jellyfish count -t 1 -m 25 -s 100000000  --canonical  /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/both.fa
+* Running CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/trinity-plugins/jellyfish/bin/jellyfish dump -L 1 mer_counts.jf > jellyfish.kmers.fa
+* Running CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/trinity-plugins/jellyfish/bin/jellyfish histo -t 1 -o jellyfish.kmers.fa.histo mer_counts.jf
+----------------------------------------------
+--------------- Inchworm ---------------------
+-- (Linear contig construction from k-mers) --
+----------------------------------------------
+
+* Running CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/Inchworm/bin//inchworm --kmers jellyfish.kmers.fa --run_inchworm -K 25 -L 25 --monitor 1   --DS  --num_threads 1  --PARALLEL_IWORM  > /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/inchworm.K25.L25.DS.fa.tmp
+* Running CMD: mv /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/inchworm.K25.L25.DS.fa.tmp /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/inchworm.K25.L25.DS.fa
+Friday, November 23, 2018: 16:22:22	CMD: touch /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/inchworm.K25.L25.DS.fa.finished
+--------------------------------------------------------
+-------------------- Chrysalis -------------------------
+-- (Contig Clustering & de Bruijn Graph Construction) --
+--------------------------------------------------------
+
+inchworm_target: /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/both.fa
+bowite_reads_fa: /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/both.fa
+chrysalis_reads_fa: /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/both.fa
+* Running CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/util/support_scripts/filter_iworm_by_min_length_or_cov.pl /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/inchworm.K25.L25.DS.fa 100 10 > /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/inchworm.K25.L25.DS.fa.min100
+* Running CMD: bowtie2-build -o 3 /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/inchworm.K25.L25.DS.fa.min100 /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/inchworm.K25.L25.DS.fa.min100 1>/dev/null
+* Running CMD: bash -c " set -o pipefail;bowtie2 --local -k 2 --threads 1 -f --score-min G,46,0 -x /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/inchworm.K25.L25.DS.fa.min100 /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/both.fa  | samtools view -@ 1 -F4 -Sb - | samtools sort -m 5368709120 -@ 1 -no - - > /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/iworm.bowtie.nameSorted.bam" 
+* Running CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/util/support_scripts/scaffold_iworm_contigs.pl /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/iworm.bowtie.nameSorted.bam /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/inchworm.K25.L25.DS.fa > /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/iworm_scaffolds.txt
+* Running CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/Chrysalis/GraphFromFasta -i /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/inchworm.K25.L25.DS.fa -r /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/both.fa -min_contig_length 200 -min_glue 2 -glue_factor 0.05 -min_iso_ratio 0.05 -t 1 -k 24 -kk 48  -scaffolding /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/iworm_scaffolds.txt  > /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/iworm_cluster_welds_graph.txt
+* Running CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/Chrysalis/BubbleUpClustering -i /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/inchworm.K25.L25.DS.fa  -weld_graph /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/iworm_cluster_welds_graph.txt -min_contig_length 200  > /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/GraphFromIwormFasta.out
+* Running CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/Chrysalis/CreateIwormFastaBundle -i /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/GraphFromIwormFasta.out -o /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/bundled_iworm_contigs.fasta -min 200
+* Running CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/Chrysalis/ReadsToTranscripts -i /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir/both.fa -f /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/bundled_iworm_contigs.fasta -o /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/readsToComponents.out -t 1 -max_mem_reads 50000000 
+* Running CMD: /usr/bin/sort --parallel=1 -T . -S 10G -k 1,1n /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/readsToComponents.out > /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//chrysalis/readsToComponents.out.sort
+Friday, November 23, 2018: 16:22:50	CMD: mkdir -p read_partitions/Fb_0/CBin_0
+Friday, November 23, 2018: 16:22:51	CMD: mkdir -p read_partitions/Fb_0/CBin_1
+Friday, November 23, 2018: 16:22:51	CMD: mkdir -p read_partitions/Fb_0/CBin_2
+Friday, November 23, 2018: 16:22:51	CMD: touch partitioned_reads.files.list.ok
+Friday, November 23, 2018: 16:22:51	CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/util/support_scripts/write_partitioned_trinity_cmds.pl --reads_list_file partitioned_reads.files.list --CPU 1 --max_memory 1G  --run_as_paired  --seqType fa --trinity_complete --full_cleanup  > recursive_trinity.cmds
+Friday, November 23, 2018: 16:22:51	CMD: touch recursive_trinity.cmds.ok
+Friday, November 23, 2018: 16:22:51	CMD: touch recursive_trinity.cmds.ok
+
+
+--------------------------------------------------------------------------------
+------------ Trinity Phase 2: Assembling Clusters of Reads ---------------------
+--------------------------------------------------------------------------------
+
+Friday, November 23, 2018: 16:22:51	CMD: /sw/apps/bioinfo/trinity/2.4.0/rackham/trinity-plugins/parafly/bin/ParaFly -c recursive_trinity.cmds -CPU 1 -v 
+Number of Commands: 244
+succeeded(1)   0.409836% completed.    succeeded(2)   0.819672% completed.    succeeded(3)   1.22951% completed.    succeeded(4)   1.63934% completed.    succeeded(5)   2.04918% completed.    succeeded(6)   2.45902% completed.    succeeded(7)   2.86885% completed.    succeeded(8)   3.27869% completed.    succeeded(9)   3.68852% completed.    succeeded(10)   4.09836% completed.    succeeded(11)   4.5082% completed.    succeeded(12)   4.91803% completed.    succeeded(13)   5.32787% completed.    succeeded(14)   5.7377% completed.    succeeded(15)   6.14754% completed.    succeeded(16)   6.55738% completed.    succeeded(17)   6.96721% completed.    succeeded(18)   7.37705% completed.    succeeded(19)   7.78688% completed.    succeeded(20)   8.19672% completed.    succeeded(21)   8.60656% completed.    succeeded(22)   9.01639% completed.    succeeded(23)   9.42623% completed.    succeeded(24)   9.83607% completed.    succeeded(25)   10.2459% completed.    succeeded(26)   10.6557% completed.    succeeded(27)   11.0656% completed.    succeeded(28)   11.4754% completed.    succeeded(29)   11.8852% completed.    succeeded(30)   12.2951% completed.    succeeded(31)   12.7049% completed.    succeeded(32)   13.1148% completed.    succeeded(33)   13.5246% completed.    succeeded(34)   13.9344% completed.    succeeded(35)   14.3443% completed.    succeeded(36)   14.7541% completed.    succeeded(37)   15.1639% completed.    succeeded(38)   15.5738% completed.    succeeded(39)   15.9836% completed.    succeeded(40)   16.3934% completed.    succeeded(41)   16.8033% completed.    succeeded(42)   17.2131% completed.    succeeded(43)   17.623% completed.    succeeded(44)   18.0328% completed.    succeeded(45)   18.4426% completed.    succeeded(46)   18.8525% completed.    succeeded(47)   19.2623% completed.    succeeded(48)   19.6721% completed.    succeeded(49)   20.082% completed.    succeeded(50)   20.4918% completed.    succeeded(51)   20.9016% completed.    succeeded(52)   21.3115% completed.    succeeded(53)   21.7213% completed.    succeeded(54)   22.1311% completed.    succeeded(55)   22.541% completed.    succeeded(56)   22.9508% completed.    succeeded(57)   23.3607% completed.    succeeded(58)   23.7705% completed.    succeeded(59)   24.1803% completed.    succeeded(60)   24.5902% completed.    succeeded(61)   25% completed.    succeeded(62)   25.4098% completed.    succeeded(63)   25.8197% completed.    succeeded(64)   26.2295% completed.    succeeded(65)   26.6393% completed.    succeeded(66)   27.0492% completed.    succeeded(67)   27.459% completed.    succeeded(68)   27.8689% completed.    succeeded(69)   28.2787% completed.    succeeded(70)   28.6885% completed.    succeeded(71)   29.0984% completed.    succeeded(72)   29.5082% completed.    succeeded(73)   29.918% completed.    succeeded(74)   30.3279% completed.    succeeded(75)   30.7377% completed.    succeeded(76)   31.1475% completed.    succeeded(77)   31.5574% completed.    succeeded(78)   31.9672% completed.    succeeded(79)   32.377% completed.    succeeded(80)   32.7869% completed.    succeeded(81)   33.1967% completed.    succeeded(82)   33.6066% completed.    succeeded(83)   34.0164% completed.    succeeded(84)   34.4262% completed.    succeeded(85)   34.8361% completed.    succeeded(86)   35.2459% completed.    succeeded(87)   35.6557% completed.    succeeded(88)   36.0656% completed.    succeeded(89)   36.4754% completed.    succeeded(90)   36.8852% completed.    succeeded(91)   37.2951% completed.    succeeded(92)   37.7049% completed.    succeeded(93)   38.1148% completed.    succeeded(94)   38.5246% completed.    succeeded(95)   38.9344% completed.    succeeded(96)   39.3443% completed.    succeeded(97)   39.7541% completed.    succeeded(98)   40.1639% completed.    succeeded(99)   40.5738% completed.    succeeded(100)   40.9836% completed.    succeeded(101)   41.3934% completed.    succeeded(102)   41.8033% completed.    succeeded(103)   42.2131% completed.    succeeded(104)   42.623% completed.    succeeded(105)   43.0328% completed.    succeeded(106)   43.4426% completed.    succeeded(107)   43.8525% completed.    succeeded(108)   44.2623% completed.    succeeded(109)   44.6721% completed.    succeeded(110)   45.082% completed.    succeeded(111)   45.4918% completed.    succeeded(112)   45.9016% completed.    succeeded(113)   46.3115% completed.    succeeded(114)   46.7213% completed.    succeeded(115)   47.1311% completed.    succeeded(116)   47.541% completed.    succeeded(117)   47.9508% completed.    succeeded(118)   48.3607% completed.    succeeded(119)   48.7705% completed.    succeeded(120)   49.1803% completed.    succeeded(121)   49.5902% completed.    succeeded(122)   50% completed.    succeeded(123)   50.4098% completed.    succeeded(124)   50.8197% completed.    succeeded(125)   51.2295% completed.    succeeded(126)   51.6393% completed.    succeeded(127)   52.0492% completed.    succeeded(128)   52.459% completed.    succeeded(129)   52.8689% completed.    succeeded(130)   53.2787% completed.    succeeded(131)   53.6885% completed.    succeeded(132)   54.0984% completed.    succeeded(133)   54.5082% completed.    succeeded(134)   54.918% completed.    succeeded(135)   55.3279% completed.    succeeded(136)   55.7377% completed.    succeeded(137)   56.1475% completed.    succeeded(138)   56.5574% completed.    succeeded(139)   56.9672% completed.    succeeded(140)   57.377% completed.    succeeded(141)   57.7869% completed.    succeeded(142)   58.1967% completed.    succeeded(143)   58.6066% completed.    succeeded(144)   59.0164% completed.    succeeded(145)   59.4262% completed.    succeeded(146)   59.8361% completed.    succeeded(147)   60.2459% completed.    succeeded(148)   60.6557% completed.    succeeded(149)   61.0656% completed.    succeeded(150)   61.4754% completed.    succeeded(151)   61.8852% completed.    succeeded(152)   62.2951% completed.    succeeded(153)   62.7049% completed.    succeeded(154)   63.1148% completed.    succeeded(155)   63.5246% completed.    succeeded(156)   63.9344% completed.    succeeded(157)   64.3443% completed.    succeeded(158)   64.7541% completed.    succeeded(159)   65.1639% completed.    succeeded(160)   65.5738% completed.    succeeded(161)   65.9836% completed.    succeeded(162)   66.3934% completed.    succeeded(163)   66.8033% completed.    succeeded(164)   67.2131% completed.    succeeded(165)   67.623% completed.    succeeded(166)   68.0328% completed.    succeeded(167)   68.4426% completed.    succeeded(168)   68.8525% completed.    succeeded(169)   69.2623% completed.    succeeded(170)   69.6721% completed.    succeeded(171)   70.082% completed.    succeeded(172)   70.4918% completed.    succeeded(173)   70.9016% completed.    succeeded(174)   71.3115% completed.    succeeded(175)   71.7213% completed.    succeeded(176)   72.1311% completed.    succeeded(177)   72.541% completed.    succeeded(178)   72.9508% completed.    succeeded(179)   73.3607% completed.    succeeded(180)   73.7705% completed.    succeeded(181)   74.1803% completed.    succeeded(182)   74.5902% completed.    succeeded(183)   75% completed.    succeeded(184)   75.4098% completed.    succeeded(185)   75.8197% completed.    succeeded(186)   76.2295% completed.    succeeded(187)   76.6393% completed.    succeeded(188)   77.0492% completed.    succeeded(189)   77.459% completed.    succeeded(190)   77.8689% completed.    succeeded(191)   78.2787% completed.    succeeded(192)   78.6885% completed.    succeeded(193)   79.0984% completed.    succeeded(194)   79.5082% completed.    succeeded(195)   79.918% completed.    succeeded(196)   80.3279% completed.    succeeded(197)   80.7377% completed.    succeeded(198)   81.1475% completed.    succeeded(199)   81.5574% completed.    succeeded(200)   81.9672% completed.    succeeded(201)   82.377% completed.    succeeded(202)   82.7869% completed.    succeeded(203)   83.1967% completed.    succeeded(204)   83.6066% completed.    succeeded(205)   84.0164% completed.    succeeded(206)   84.4262% completed.    succeeded(207)   84.8361% completed.    succeeded(208)   85.2459% completed.    succeeded(209)   85.6557% completed.    succeeded(210)   86.0656% completed.    succeeded(211)   86.4754% completed.    succeeded(212)   86.8852% completed.    succeeded(213)   87.2951% completed.    succeeded(214)   87.7049% completed.    succeeded(215)   88.1148% completed.    succeeded(216)   88.5246% completed.    succeeded(217)   88.9344% completed.    succeeded(218)   89.3443% completed.    succeeded(219)   89.7541% completed.    succeeded(220)   90.1639% completed.    succeeded(221)   90.5738% completed.    succeeded(222)   90.9836% completed.    succeeded(223)   91.3934% completed.    succeeded(224)   91.8033% completed.    succeeded(225)   92.2131% completed.    succeeded(226)   92.623% completed.    succeeded(227)   93.0328% completed.    succeeded(228)   93.4426% completed.    succeeded(229)   93.8525% completed.    succeeded(230)   94.2623% completed.    succeeded(231)   94.6721% completed.    succeeded(232)   95.082% completed.    succeeded(233)   95.4918% completed.    succeeded(234)   95.9016% completed.    succeeded(235)   96.3115% completed.    succeeded(236)   96.7213% completed.    succeeded(237)   97.1311% completed.    succeeded(238)   97.541% completed.    succeeded(239)   97.9508% completed.    succeeded(240)   98.3607% completed.    succeeded(241)   98.7705% completed.    succeeded(242)   99.1803% completed.    succeeded(243)   99.5902% completed.    succeeded(244)   100% completed.    
+
+All commands completed successfully. :-)
+
+
+
+** Harvesting all assembled transcripts into a single multi-fasta file...
+
+Friday, November 23, 2018: 16:33:26	CMD: find read_partitions/  -name '*inity.fasta'  | /sw/apps/bioinfo/trinity/2.4.0/rackham/util/support_scripts/partitioned_trinity_aggregator.pl TRINITY_DN > Trinity.fasta.tmp
+
+
+###################################################################
+Butterfly assemblies are written to /domus/h1/caithaug/BioProject/trinity_reduced_dataset/trinity_out_dir//Trinity.fasta
+###################################################################
+
+
+Finished job 1.
+1 of 2 steps (50%) done
+
+localrule all:
+    input: trinity_out_dir/Trinity.fasta
+    jobid: 0
+
+Finished job 0.
+2 of 2 steps (100%) done
+Shutting down, this might take some time.
+Complete log: /domus/h1/caithaug/BioProject/trinity_reduced_dataset/.snakemake/log/2018-11-23T162207.899321.snakemake.log
