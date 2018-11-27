@@ -1,3 +1,4 @@
+# Need samtools and bowtie2 in path to work.
 # Execute with command: snakemake ./data/mapping/4_mapped.bam
 
 # Inspo: https://github.com/EnvGen/snakemake-workflows/blob/master/bio/ngs/rules/mapping/bowtie2.rules
