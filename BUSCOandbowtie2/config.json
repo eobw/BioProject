@@ -1,0 +1,17 @@
+{
+  "input":{
+    "reference":"data/reference/",
+    "reads":["data/reads/4_mapped_r1.fastq.gz","data/reads/4_mapped_r2.fastq.gz"],
+    "organism":"eukaryote"},
+  "bowtie2":{
+    "threads":4},
+  "busco":{
+      "lineage":"eukaryota_odb9/",
+      "mode":"genome"},
+  "trinity":{
+      
+  },
+  "output":{
+      
+  }
+}

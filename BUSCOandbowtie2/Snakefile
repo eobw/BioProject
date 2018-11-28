@@ -1,0 +1,11 @@
+# Execute with: snakemake data/mapping/4_mapped.bam run_4
+
+
+include: "bowtie2"
+include: "busco"
+
+
+#rule top:
+#    #"run_4"
+#    input:
+#    "data/mapping/4_mapped.bam"
