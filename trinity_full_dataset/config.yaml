@@ -1,0 +1,8 @@
+seq_type:
+    type: pe
+
+software:
+    trinity:        ./bin/Trinity
+
+trinity_params:
+    memory:     10G

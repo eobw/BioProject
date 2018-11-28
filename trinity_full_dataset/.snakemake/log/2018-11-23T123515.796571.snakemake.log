@@ -1,0 +1,27 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	all
+	1	trinity
+	2
+
+rule trinity:
+    input: data/ERR305399.left.fastq.gz, data/ERR305399.right.fastq.gz
+    output: trinity_out_dir/Trinity.fasta
+    log: logs/trinity.log
+    jobid: 1
+
+Finished job 1.
+1 of 2 steps (50%) done
+
+localrule all:
+    input: trinity_out_dir/Trinity.fasta
+    jobid: 0
+
+Finished job 0.
+2 of 2 steps (100%) done
+Shutting down, this might take some time.
+Complete log: /domus/h1/caithaug/BioProject/trinity_6_nodes/.snakemake/log/2018-11-23T123515.796571.snakemake.log

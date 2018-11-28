@@ -1,14 +1,5 @@
-prefix:
-    test # This should be your research study animal, plant, cell line, ...
-
-samples_pe:
-    pe:
-        forward: data/ERR305399.fastq.gz
-        reverse: data/ERR305399.fastq.gz
-
-samples_se:
-    se:
-        single:   data/test3.fastq.gz
+seq_type:
+    type: pe
 
 software:
     trinity:        ./bin/Trinity
