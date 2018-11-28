@@ -9,13 +9,21 @@ import re
 configfile: "config.json"
 
 
+def mapping_bowtie2_command():
+    if len(config["bowtie2"]["reads"])==2:
+        return " -1 "+config["bowtie2"]["reads"][0]+" -2 "+config["bowtie2"]["reads"][1]+" "
+    elif len(config["bowtie2"]["reads"])==1:
+        return " -U "+config["bowtie2"]["reads"][0]+" "
+    else:
+        raise(Exception("Reads should be paired or single ended."))
+
 
 rule all:
     input:
         "data/mapping/4_mapped.bam"
 
-# path to index file without extension
-index_basename="data/index"+re.split('/|\.',config["bowtie2"]["reference"])[-2]
+# path to index file without extension (removed .fa or .fasta)
+index_basename="data/index/"+re.split('/|\.',config["bowtie2"]["reference"])[-2]
 
 rule bowtie2_index:
     input:
@@ -32,8 +40,7 @@ rule bowtie2_map:
         expand(index_basename+".{index}.bt2", index=range(1,5)),
         expand(index_basename+".rev.{index}.bt2", index=range(1,3)),
         # Read files
-        left=config["bowtie2"]["reads"]["paired"][0],
-        right=config["bowtie2"]["reads"]["paired"][1]
+        config["bowtie2"]["reads"]
     output:
         "data/mapping/4_mapped.bam"
     params:
@@ -42,4 +49,8 @@ rule bowtie2_map:
     #shell: # need to add more different params here that changes according to config-file.
     #    "bowtie2 -x {params.ref_idx_base} -1 {input.left} -2 {input.right} | samtools view -bS - > {output}"
     run: # need to add more different params here that changes according to config-file.
-        shell("bowtie2 -x {params.ref_idx_base} -1 {input.left} -2 {input.right} | samtools view -bS - > {output}")
+        shell("bowtie2 \
+        -x {params.ref_idx_base} \
+        "+mapping_bowtie2_command()+"\
+        -p {threads} \
+        | samtools view -bS - > {output}")
