@@ -1,0 +1,33 @@
+configfile: "config.yaml"
+
+seq_type = config["seq_type"]["type"]
+
+rule all:
+    input:
+        "trinity_out_dir/Trinity_{sample}.fasta"
+
+def define_trinity_inputs(wildcards):
+
+    if (seq_type == "pe"):
+        input = ["data/{sample}_left.fastq.gz","data/{sample}_right.fastq.gz"]
+
+    elif (seq_type == "se"):
+        input = "data/{sample}.fastq.gz"
+    return input
+
+
+rule trinity:
+    input:
+        define_trinity_inputs
+    output:
+        "trinity_out_dir/Trinity_{sample}.fasta"
+    params:
+        memory= config["trinity_params"]["memory"],
+        outdir="trinity_out_dir/"
+    threads: 4
+    run:
+        if seq_type == "pe":
+            shell("Trinity --seqType fq --max_memory {params.memory} --left {input[0]}  --right {input[1]} --CPU {threads} --output {params.outdir}")
+        elif seq_type == "se":
+            shell("Trinity --seqType fq --max_memory {params.memory} --single {input} --CPU {threads} --output {params.outdir}")
+
