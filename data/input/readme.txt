@@ -1,0 +1,1 @@
+input data folder for: read-files, annotation, assembly
