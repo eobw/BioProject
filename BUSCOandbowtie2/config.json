@@ -1,12 +1,13 @@
 {
   "input":{
-    "reference":"data/reference/",
-    "reads":["data/reads/4_mapped_r1.fastq.gz","data/reads/4_mapped_r2.fastq.gz"],
+    "reference":"../data/input/4.fa",
+    "reads":["../data/input/4_mapped_r1.fastq.gz","..data/input/4_mapped_r2.fastq.gz"],
+    "annotation":"../data/input/annotation.file",
     "organism":"eukaryote"},
   "bowtie2":{
     "threads":4},
   "busco":{
-      "lineage":"eukaryota_odb9/",
+      "lineage":"../data/eukaryota_odb9",
       "mode":"genome"},
   "trinity":{
       
