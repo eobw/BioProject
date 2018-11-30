@@ -12,10 +12,13 @@ configfile: "config.json"
 
 mode = config["busco"]["mode"]
 lineage = config["busco"]["lineage"]
+# path to index file without extension (removed .fa or .fasta)
+ref_name=re.split('/|\.',config["input"]["reference"])[-2]
+out_dir = 'run_'+ref_name
 rule busco_ann:
     input:
         config["input"]["reference"]
     output:
-        directory("run_4")
+        directory('run_'+ref_name)
     shell:
-        "run_busco -i {input} -l {lineage} -o {output} -m {mode}"
+        "run_busco -i {input} -l {lineage} -o {ref_name} -m {mode}"
