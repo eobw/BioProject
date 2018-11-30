@@ -14,11 +14,15 @@ mode = config["busco"]["mode"]
 lineage = config["busco"]["lineage"]
 # path to index file without extension (removed .fa or .fasta)
 ref_name=re.split('/|\.',config["input"]["reference"])[-2]
-out_dir = 'run_'+ref_name
 rule busco_ann:
     input:
         config["input"]["reference"]
     output:
-        directory('run_'+ref_name)
+        directory('../data/intermediate/run_'+ref_name)
     shell:
-        "run_busco -i {input} -l {lineage} -o {ref_name} -m {mode}"
+        """
+        run_busco -i {input} -l {lineage} -o {ref_name} -m {mode}
+        mv run_{ref_name} ../data/intermediate
+        mv tmp ../data/intermediate
+        """
+# Have to move since since otherwise the busco config.ini file has to be changed for other output dir
