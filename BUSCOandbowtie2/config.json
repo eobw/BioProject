@@ -1,7 +1,7 @@
 {
   "input":{
     "reference":"../data/input/4.fa",
-    "reads":["../data/input/4_mapped_r1.fastq.gz","..data/input/4_mapped_r2.fastq.gz"],
+    "reads":["../data/input/4_mapped_r1.fastq.gz","../data/input/4_mapped_r2.fastq.gz"],
     "annotation":"../data/input/annotation.file",
     "organism":"eukaryote"},
   "bowtie2":{
@@ -10,9 +10,9 @@
       "lineage":"../data/eukaryota_odb9",
       "mode":"genome"},
   "trinity":{
-      
+
   },
   "output":{
-      
+
   }
 }
