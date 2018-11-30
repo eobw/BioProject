@@ -1,4 +1,4 @@
-# Execute with: snakemake ../data/intermediate/4_mapped.bam run_4
+# Execute with: snakemake ../data/intermediate/4_mapped.bam ../data/intermediate/run_4
 
 
 include: "bowtie2"
