@@ -1,0 +1,26 @@
+configfile: "config.json"
+
+def PE_SE_trinity_command():
+    if len(config["input"]["reads"])==2:
+        return " --left "+config["input"]["reads"][0]+" --right "+config["input"]["reads"][1]+" "
+    elif len(config["input"]["reads"])==1:
+        return " --single "+config["input"]["reads"][0]+" "
+    else:
+        raise(Exception("Reads should be paired or single ended."))
+
+rule trinity:
+    input:
+        config["input"]["reads"]
+    output:
+        directory("../data/intermediate/trinity")
+    params:
+        memory=config["trinity"]["memory"],
+    threads:
+        config["trinity"]["threads"]
+    run:
+        shell("Trinity \
+        --seqType fq \
+        --max_memory {params.memory}\
+        "+PE_SE_trinity_command()+"\
+        --CPU {threads} \
+        --output {output}")

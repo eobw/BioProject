@@ -3,7 +3,9 @@
 rule all:
     input:
         "../data/intermediate/4_mapped.bam",
-        "../data/intermediate/run_4"
+        "../data/intermediate/run_4",
+        "../data/intermediate/trinity"
 
 include: "bowtie2"
 include: "busco"
+include: "trinity"

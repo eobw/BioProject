@@ -10,8 +10,8 @@
       "lineage":"../data/eukaryota_odb9",
       "mode":"genome"},
   "trinity":{
-
-  },
+    "threads":4,
+    "memory":"4G"},
   "output":{
 
   }
