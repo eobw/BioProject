@@ -1,5 +1,5 @@
 # Smakemake file for running BUSCO3.
-# Run command '$ snakemake run_4' to run analysis on example data 4.fa
+# Run command '$ snakemake -s busco run_4' to run analysis on example data 4.fa
 # Change to transcriptome by adding --config mode=transcriptome
 # Parameters can be changed by changing config.json
 

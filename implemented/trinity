@@ -1,3 +1,5 @@
+# Execute with "snakemake -s trinity ../data/intermediate/trinity"
+
 configfile: "config.json"
 
 def PE_SE_trinity_command():

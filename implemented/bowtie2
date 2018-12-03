@@ -1,9 +1,5 @@
 # Need samtools and bowtie2 in path to work.
-# Execute with command: snakemake ./data/mapping/4_mapped.bam
-
-# Inspo: https://github.com/EnvGen/snakemake-workflows/blob/master/bio/ngs/rules/mapping/bowtie2.rules
-
-# Need to create config file and make script more general.
+# Execute with command: snakemake -s bowtie2 ../data/intermediate/4_mapped.bam
 
 import re
 configfile: "config.json"
