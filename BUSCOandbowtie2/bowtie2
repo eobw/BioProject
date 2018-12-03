@@ -18,9 +18,9 @@ def mapping_bowtie2_command():
         raise(Exception("Reads should be paired or single ended."))
 
 
-rule all:
-    input:
-        "../data/intermediate/4_mapped.bam"
+#rule all:
+#    input:
+#        "../data/intermediate/4_mapped.bam"
 
 # path to index file without extension (removed .fa or .fasta)
 index_basename="../data/intermediate/index/"+re.split('/|\.',config["input"]["reference"])[-2]

@@ -1,11 +1,9 @@
-# Execute with: snakemake ../data/intermediate/4_mapped.bam ../data/intermediate/run_4
+# Execute with: snakemake
 
+rule all:
+    input:
+        "../data/intermediate/4_mapped.bam",
+        "../data/intermediate/run_4"
 
 include: "bowtie2"
 include: "busco"
-
-
-#rule top:
-#    #"run_4"
-#    input:
-#    "data/mapping/4_mapped.bam"
