@@ -1,0 +1,28 @@
+# Smakemake file for running BUSCO3.
+# Run command '$ snakemake run_4' to run analysis on example data 4.fa
+# Change to transcriptome by adding --config mode=transcriptome
+# Parameters can be changed by changing config.json
+
+# make sure augustus config is in path by:
+# export AUGUSTUS_CONFIG_PATH=/path/to/augustus/config
+# e.g. export AUGUSTUS_CONFIG_PATH=~/miniconda3/pkgs/augustus-3.2.3-boost1.60_0/config
+
+
+configfile: "config.json"
+
+mode = config["busco"]["mode"]
+lineage = config["busco"]["lineage"]
+# path to index file without extension (removed .fa or .fasta)
+ref_name=re.split('/|\.',config["input"]["reference"])[-2]
+rule busco_ann:
+    input:
+        config["input"]["reference"]
+    output:
+        directory('../data/intermediate/run_'+ref_name)
+    shell:
+        """
+        run_busco -i {input} -l {lineage} -o {ref_name} -m {mode}
+        mv run_{ref_name} ../data/intermediate
+        mv tmp ../data/intermediate
+        """
+# Have to move since since otherwise the busco config.ini file has to be changed for other output dir
