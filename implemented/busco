@@ -19,9 +19,11 @@ rule busco_ann:
         config["input"]["reference"]
     output:
         directory('../data/intermediate/run_'+ref_name)
+    log:
+        "logs/BUSCO_annotation.log"
     shell:
         """
-        run_busco -i {input} -l {lineage} -o {ref_name} -m {mode}
+        run_busco -i {input} -l {lineage} -o {ref_name} -m {mode} > {log}
         mv run_{ref_name} ../data/intermediate
         mv tmp ../data/intermediate
         """

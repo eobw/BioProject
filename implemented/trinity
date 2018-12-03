@@ -19,10 +19,13 @@ rule trinity:
         memory=config["trinity"]["memory"],
     threads:
         config["trinity"]["threads"]
+    log:
+        "logs/trinity_assembly.log"
     run:
         shell("Trinity \
         --seqType fq \
         --max_memory {params.memory}\
         "+PE_SE_trinity_command()+"\
         --CPU {threads} \
-        --output {output}")
+        --output {output} \
+        > {log}")

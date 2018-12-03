@@ -1,0 +1,73 @@
+INFO	****************** Start a BUSCO 3.0.2 analysis, current time: 12/03/2018 16:07:02 ******************
+INFO	Configuration loaded from /home/erik/miniconda3/bin/../config/config.ini
+INFO	Init tools...
+INFO	Check dependencies...
+INFO	Check input file...
+INFO	To reproduce this run: python /home/erik/miniconda3/bin/run_busco -i ../data/input/4.fa -o 4 -l ../data/eukaryota_odb9/ -m genome -c 1 -sp fly
+INFO	Mode is: genome
+INFO	The lineage dataset is: eukaryota_odb9 (eukaryota)
+INFO	Temp directory is ./tmp/
+INFO	****** Phase 1 of 2, initial predictions ******
+INFO	****** Step 1/3, current time: 12/03/2018 16:07:02 ******
+INFO	Create blast database...
+INFO	[makeblastdb]	Building a new DB, current time: 12/03/2018 16:07:02
+INFO	[makeblastdb]	New DB name:   /mnt/c/Users/erik_/Documents/GitHub/BioProject/implemented/tmp/4_3091475753
+INFO	[makeblastdb]	New DB title:  ../data/input/4.fa
+INFO	[makeblastdb]	Sequence type: Nucleotide
+INFO	[makeblastdb]	Keep MBits: T
+INFO	[makeblastdb]	Maximum file size: 1000000000B
+INFO	[makeblastdb]	Adding sequences from FASTA; added 1 sequences in 0.0212009 seconds.
+INFO	[makeblastdb]	1 of 1 task(s) completed at 12/03/2018 16:07:02
+INFO	Running tblastn, writing output to /mnt/c/Users/erik_/Documents/GitHub/BioProject/implemented/run_4/blast_output/tblastn_4.tsv...
+INFO	[tblastn]	1 of 1 task(s) completed at 12/03/2018 16:07:03
+INFO	****** Step 2/3, current time: 12/03/2018 16:07:03 ******
+INFO	Maximum number of candidate contig per BUSCO limited to: 3
+INFO	Getting coordinates for candidate regions...
+INFO	Pre-Augustus scaffold extraction...
+INFO	Running Augustus prediction using fly as species:
+INFO	[augustus]	Please find all logs related to Augustus errors here: /mnt/c/Users/erik_/Documents/GitHub/BioProject/implemented/run_4/augustus_output/augustus.log
+INFO	[augustus]	1 of 3 task(s) completed at 12/03/2018 16:07:11
+INFO	[augustus]	2 of 3 task(s) completed at 12/03/2018 16:07:14
+INFO	[augustus]	3 of 3 task(s) completed at 12/03/2018 16:07:15
+INFO	Extracting predicted proteins...
+INFO	****** Step 3/3, current time: 12/03/2018 16:07:16 ******
+INFO	Running HMMER to confirm orthology of predicted proteins:
+INFO	[hmmsearch]	1 of 3 task(s) completed at 12/03/2018 16:07:16
+INFO	[hmmsearch]	2 of 3 task(s) completed at 12/03/2018 16:07:16
+INFO	[hmmsearch]	3 of 3 task(s) completed at 12/03/2018 16:07:16
+INFO	Results:
+INFO	C:0.7%[S:0.7%,D:0.0%],F:0.0%,M:99.3%,n:303
+INFO	2 Complete BUSCOs (C)
+INFO	2 Complete and single-copy BUSCOs (S)
+INFO	0 Complete and duplicated BUSCOs (D)
+INFO	0 Fragmented BUSCOs (F)
+INFO	301 Missing BUSCOs (M)
+INFO	303 Total BUSCO groups searched
+INFO	****** Phase 2 of 2, predictions using species specific training ******
+INFO	****** Step 1/3, current time: 12/03/2018 16:07:16 ******
+INFO	Extracting missing and fragmented buscos from the ancestral_variants file...
+INFO	Running tblastn, writing output to /mnt/c/Users/erik_/Documents/GitHub/BioProject/implemented/run_4/blast_output/tblastn_4_missing_and_frag_rerun.tsv...
+INFO	[tblastn]	1 of 1 task(s) completed at 12/03/2018 16:07:27
+INFO	Maximum number of candidate contig per BUSCO limited to: 3
+INFO	Getting coordinates for candidate regions...
+INFO	****** Step 2/3, current time: 12/03/2018 16:07:27 ******
+INFO	Training Augustus using Single-Copy Complete BUSCOs:
+INFO	Converting predicted genes to short genbank files at 12/03/2018 16:07:27...
+INFO	All files converted to short genbank files, now running the training scripts at 12/03/2018 16:07:27...
+INFO	Pre-Augustus scaffold extraction...
+INFO	Re-running Augustus with the new metaparameters, number of target BUSCOs: 301
+INFO	[augustus]	1 of 1 task(s) completed at 12/03/2018 16:07:29
+INFO	Extracting predicted proteins...
+INFO	****** Step 3/3, current time: 12/03/2018 16:07:29 ******
+INFO	Running HMMER to confirm orthology of predicted proteins:
+INFO	Results:
+INFO	C:0.7%[S:0.7%,D:0.0%],F:0.0%,M:99.3%,n:303
+INFO	2 Complete BUSCOs (C)
+INFO	2 Complete and single-copy BUSCOs (S)
+INFO	0 Complete and duplicated BUSCOs (D)
+INFO	0 Fragmented BUSCOs (F)
+INFO	301 Missing BUSCOs (M)
+INFO	303 Total BUSCO groups searched
+INFO	BUSCO analysis done. Total running time: 28.15596628189087 seconds
+INFO	Results written in /mnt/c/Users/erik_/Documents/GitHub/BioProject/implemented/run_4/
+
