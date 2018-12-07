@@ -9,6 +9,7 @@
 
 
 configfile: "config.json"
+folder = "../data/intermediate/"
 
 mode = config["busco"]["mode"]
 lineage = config["busco"]["lineage"]
@@ -18,13 +19,13 @@ rule busco_ann:
     input:
         config["input"]["reference"]
     output:
-        directory('../data/intermediate/run_'+ref_name)
+        directory(folder+'run_{sample}')
     log:
-        "logs/BUSCO_annotation.log"
+        folder+"logs/BUSCO_run_{sample}_annotation.log"
     shell:
         """
-        run_busco -i {input} -l {lineage} -o {ref_name} -m {mode} > {log}
-        mv run_{ref_name} ../data/intermediate
-        mv tmp ../data/intermediate
+        run_busco -i {input} -l {lineage} -o {wildcards.sample} -m {mode} > {log}
+        mv run_{wildcards.sample} {folder}
+        mv tmp {folder}
         """
 # Have to move since since otherwise the busco config.ini file has to be changed for other output dir
