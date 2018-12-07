@@ -1,9 +1,9 @@
-# Execute with: snakemake
+# Execute with: snakemake ../data/intermediate/[run_name]_sorted.bam ../data/intermediate/run_[run_name]
 
 rule all:
     input:
-        "../data/intermediate/4_mapped.bam",
-        "../data/intermediate/run_4",
+        "../data/intermediate/{sample}_mapped.bam",
+        "../data/intermediate/run_{sample}",
         "../data/intermediate/trinity"
 
 include: "bowtie2"
