@@ -14,80 +14,118 @@ parser.add_argument("--annotation",help="Annotation in .gff format")
 parser.add_argument("--mapped",help="") #Maybe add this?
 parser.add_argument("--output",help="...")
 parser.add_argument("--organism")
+# These are not added to config.json yet.. 
+parser.add_argument("--cpu", help="")
+parser.add_argument("--memory",help="")
 
 args=parser.parse_args()
 
-read_basename=os.path.basename(args.reads[0])
-read_basename_no_extension=re.split(".fq|.fastq",read_basename)[0]
-if len(re.split(".fq|.fastq",read_basename))!=2:
-    print("Error. Reads are not in (zipped) fastq format.")
+#read_basename=os.path.basename(args.reads[0])
+#read_basename_no_extension=re.split(".fq|.fastq",read_basename)[0]
+#if len(re.split(".fq|.fastq",read_basename))!=2:
+#    print("Error. Reads are not in (zipped) fastq format.")
+#    sys.exit()
+
+def check_organism():
+    if args.organism.lower() in "prokaryote":
+        args.organism="prokaryote"
+    
+    elif args. organism.lower() in "eukaryote":
+        args.organism="eukaryote"
+    else: 
+        print("Error. Unrecognized organism.")
+        sys.exit()
+
+def check_annotation():
+    print("Checker for annotation file is developed yet.")
+    print("Exiting...")
+    sys.exit()
+    
+def check_single_reads():
+        checked_reads=subprocess.check_output(
+        "./check_single_read_files.sh "+
+        args.reads[0],
+        shell=True,
+        encoding="utf8"
+        )
+        if len(checked_reads.split("\n"))==2:
+            # Do nothing, data file is single end.
+            pass 
+        else:
+            # Interleaved paired end reads. 
+            # They have been deinterleaved with check_single_read_files.sh
+            # Store new, deinterleaved readfiles in args.reads:
+            args.format,args.reads[0]=checked_reads.split("\n")[:2]
+            args.reads.append(checked_reads.split("\n")[2])
+
+            
+def check_paired_reads():
+        ordered_reads=subprocess.check_output(
+        "./check_paired_read_files.sh "+
+        args.reads[0]+" "+
+        args.reads[1],
+        shell=True,
+        encoding="utf8")
+        if len(ordered_reads.split("\n"))==2:
+            print("Error. Unrecognized header format for paired end reads.")
+            sys.exit()
+        else:
+            args.format,args.reads[0],args.reads[1]=ordered_reads.split("\n")[:3]
+
+def check_mapped():
+    print("Checker for mapper has not been developed yet.")
+    sys.exit()
+    
+def check_ref():
+    print("Checker for reference has bot been developed yet.")
     sys.exit()
 
-
-# Check argument criteria
-
-# 1. If a mapped file is provided, we also need the reference file the reads were mapped to.
+# ---Check mapping file---
+# If a mapping file (.bam/.sam) is provided, the reference used for mapping 
+# must also be provided.
 if args.mapped and not args.reference:
-    print("Error. If map file is provided, the reference it was mapped to must also be provided.")
+    print("Error. If a mapping file is provided, the reference used for mapping must also be provided.")
     sys.exit()
+elif args.mapped:
+    check_mapped()
+elif args.ref:
+    check_ref()
 
-# 2.a An organism or annotation file must be provided.
-if not args.organism and not args.annotation:
+
+# ---Check organism and/or annotation---
+# Organism or annotation file must be provided.
+# If none is provided, we cannot look for core genes.
+if args.organism:
+    check_organism()
+elif args.annotation:
+    check_annotation()
+else:
     print("Error. Provide organism or annotation file.")
     sys.exit()
 
-# 2.b Must recognize organism
-elif args.organism.lower() in "prokaryote":
-    args.organism="prokaryote"
 
-elif args. organism.lower() in "eukaryote":
-    args.organism="eukaryote"
-else: 
-    print("Error. Unrecognized organism.")
-    sys.exit()
-
-# 3. Check that one or two reads are provided.
+# ---Check reads---
+# At least one readfile must be provided. (single end or interleaved paired end reads)
+# At most two readiles can be provided. (paired end reads)
+#
+# Check if readfile is provided.
 if not args.reads:
     print("Error. No read files provided.")
     sys.exit()
-elif len(args.reads)>2:
+# Check if one read file is provided.
+elif len(args.reads)==1:
+    # Check that single reads are OK
+    # or deinterleave paired end reads. 
+    check_single_reads()
+# Check if two read files are provided.    
+elif len(args.reads)==2:
+    # Check that paired end reads are OK.
+    check_paired_reads()    
+# Too many readfiles were provided.    
+else:
     print("Error. Too many read files.")
     sys.exit()
-    # 4. If two read files are provided, we need to know which is forward and reverse by checking names.
-    # Other solution might be to check headers in read files...
-elif len(args.reads)==2:
-    ordered_reads=subprocess.check_output(
-    "./check_paired_read_files.sh "+
-    args.reads[0]+" "+
-    args.reads[1],
-    shell=True,
-    encoding="utf8")
-    if len(ordered_reads.split("\n"))==2:
-        print("Error. Unrecognized header format for paired end reads.")
-        sys.exit()
-    else:
-        args.format,args.reads[0],args.reads[1]=ordered_reads.split("\n")[:3]
-    # 5. If only one read file was provided. Check if it paired end or single.
-elif len(args.reads)==1:
-    checked_reads=subprocess.check_output(
-    "./check_single_read_files.sh "+
-    args.reads[0],
-    shell=True,
-    encoding="utf8"
-    )
-    if len(checked_reads.split("\n"))==2:
-        # Do nothing, data file is single end.
-        pass 
-    else:
-        # Interleaved paired end reads. 
-        # They have been deinterleaved with check_single_read_files.sh
-        # Store new, deinterleaved readfiles in args.reads:
-        args.format,args.reads[0]=checked_reads.split("\n")[:2]
-        args.reads.append(checked_reads.split("\n")[2])
-    
 
-
-# add checker for fastq files
 
 # add checker for fasta files
 
