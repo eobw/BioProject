@@ -3,6 +3,8 @@
 # Readfiles
 read=$1
 
+inputdatapath="../data/input/"
+
 # maybe add so that output files changes according to read files name.
 # out_basename=$...
 
@@ -29,8 +31,8 @@ if [[ $fline =~ ^@.*/1 ]] || [[ $fline =~ ^@.*/2 ]]; then
   num_read2=$($zip_command $read | head -10000 | grep '^@.*/2' | wc -l)
   
   if [[ $num_read1 > 0 ]] && [[ $num_read2 > 0 ]]; then
-    $zip_command $read | awk '/^@.*[/]1/{c=4} c&&c--' | gzip --stdout > deinterleaved.left.fastq.gz
-    $zip_command $read | awk '/^@.*[/]2/{c=4} c&&c--' | gzip --stdout > deinterleaved.right.fastq.gz
+    $zip_command $read | awk '/^@.*[/]1/{c=4} c&&c--' | gzip --stdout > ${inputdatapath}deinterleaved.left.fastq.gz
+    $zip_command $read | awk '/^@.*[/]2/{c=4} c&&c--' | gzip --stdout > ${inputdatapath}deinterleaved.right.fastq.gz
     echo "Illumina1.8-"
     echo "deinterleaved.left.fastq.gz"
     echo "deinterleaved.right.fastq.gz"
@@ -42,8 +44,8 @@ elif [[ $fline =~ ^@.*\ 1: ]] || [[ $fline =~ ^@.*\ 2: ]]; then
   num_read2=$($zip_command $read | head -10000 | grep '^@.* 2:' | wc -l)
 
   if [[ $num_read1 > 0 ]] && [[ $num_read2 > 0 ]]; then
-    $zip_command $read | awk '/^@.*[ ]1:/{c=4} c&&c--' | gzip --stdout > deinterleaved.left.fastq.gz
-    $zip_command $read | awk '/^@.*[ ]2:/{c=4} c&&c--' | gzip --stdout > deinterleaved.right.fastq.gz
+    $zip_command $read | awk '/^@.*[ ]1:/{c=4} c&&c--' | gzip --stdout > ${inputdatapath}deinterleaved.left.fastq.gz
+    $zip_command $read | awk '/^@.*[ ]2:/{c=4} c&&c--' | gzip --stdout > ${inputdatapath}deinterleaved.right.fastq.gz
     echo "Illumina1.8+"
     echo "deinterleaved.left.fastq.gz"
     echo "deinterleaved.right.fastq.gz"
