@@ -1,0 +1,14 @@
+# Snakefile for ruuning the inferringscript 'inferr.py' which figures out the library-type
+
+
+configfile: "config.json"
+folder = "../data/intermediate/"
+
+rule inferr:
+    input:
+        '../data/intermediate/{sample}_sorted.bam',
+        '../data/intermediate/run_{sample}'
+    output:
+        '../data/output/result_{sample}.txt'
+    shell:
+        "python ../scripts/inferr_lib.py {wildcards.sample} single"
