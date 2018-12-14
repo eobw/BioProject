@@ -1,13 +1,15 @@
 {
     "input": {
-        "reference": "4.fa",
+        "reference": "../data/input/4.fa",
         "reads": [
             "../data/input/4_mapped_r1.fastq.gz",
             "../data/input/4_mapped_r2.fastq.gz"
         ],
         "annotation": null,
         "organism": "eukaryote",
-        "mapped-reads": null
+        "mapped-reads": null,
+        "threads": 4,
+        "memory": "4G"
     },
     "bowtie2": {
         "threads": 4

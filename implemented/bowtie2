@@ -24,9 +24,11 @@ rule bowtie2_index:
         expand(index_basename+".{index}.bt2", index=range(1,5)),
         expand(index_basename+".rev.{index}.bt2", index=range(1,3))
     log:
-        folder+"logs/bowtie2_index.log"
+        "logs/bowtie2_index.log"
+    threads:
+        config["input"]["threads"]
     run:
-        shell("bowtie2-build {input} "+index_basename+" > {log}")
+        shell("bowtie2-build --threads {threads} {input} "+index_basename+" > {log}")
 
 rule bowtie2_map:
     input:
@@ -38,14 +40,14 @@ rule bowtie2_map:
     output:
         folder+"{sample}_sorted.bam"
     threads:
-        config["bowtie2"]["threads"]
+        config["input"]["threads"]
     log:
-        folder+"logs/bowtie2_{sample}_map.log"
+        "logs/bowtie2_{sample}_map.log"
     run:
         shell("bowtie2 \
         -x {index_basename} \
         "+mapping_bowtie2_command()+"\
-        -p {threads} \
+        --threads {threads} \
         2> {log} \
         | samtools view -bS - > {folder}{wildcards.sample}_mapped.bam \n \
         samtools sort {folder}{wildcards.sample}_mapped.bam > {output} \n \
