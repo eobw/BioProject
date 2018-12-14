@@ -19,7 +19,7 @@ rule busco_ann:
     input:
         config["input"]["reference"]
     output:
-        directory('{folder}run_{sample}')
+        directory('{folder}run_{sample}/')
     log:
         "{folder}logs/BUSCO_run_{sample}_annotation.log"
     shell:
