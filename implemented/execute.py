@@ -79,7 +79,7 @@ def check_mapped():
     
 def check_reference():
     print("Checker for reference has bot been developed yet.")
-    sys.exit()
+    #sys.exit()
     
 def check_memory():
     print("Checker for memory has bot been developed yet.")
@@ -88,6 +88,8 @@ def check_memory():
 def check_cpu():
     print("Checker for CPU has not been developed yet.")
     sys.exit()
+    
+
 
 # ---Check CPU---
 if args.cpu:
@@ -109,11 +111,15 @@ else:
 if args.mapped and not args.reference:
     print("Error. If a mapping file is provided, the reference used for mapping must also be provided.")
     sys.exit()
-elif args.mapped:
-    check_mapped()
-elif args.reference:
-    check_reference()
 
+if args.mapped:
+    check_mapped()
+ 
+if args.reference:
+    check_reference()
+else:
+    # Add Trinity assembly to config file.
+    args.reference="../data/intermediate/trinity/Trinity.fasta"
 
 # ---Check organism and/or annotation---
 # Organism or annotation file must be provided.
@@ -156,16 +162,17 @@ else:
 
 # Change config file
 
-with open("config2.json","r+") as configfile:
+with open("config.json","r+") as configfile:
     data=json.load(configfile)
     data["input"]["reference"]=args.reference
     data["input"]["reads"]=args.reads
     data["input"]["annotation"]=args.annotation
     data["input"]["organism"]=args.organism
+    data["input"]["mapped-reads"]=args.mapped
     configfile.seek(0)
     json.dump(data,configfile,indent=4)
     configfile.truncate()
     
 # Add execution for snakefile...
 #os.system("snakemake ../data/intermediate/trinity --dag | dot -Tsvg > dag.svg -forceall")
-os.system("snakemake ../data/intermediate/trinity --forceall")
+os.system("snakemake ../data/output/result_4.txt")
