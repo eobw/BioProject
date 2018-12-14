@@ -43,11 +43,11 @@ rule bowtie2_map:
         folder+"logs/bowtie2_{sample}_map.log"
     run:
         shell("bowtie2 \
-        -x "+index_basename+" \
+        -x {index_basename} \
         "+mapping_bowtie2_command()+"\
         -p {threads} \
         2> {log} \
-        | samtools view -bS - > "+folder+"{wildcards.sample}_mapped.bam \n \
-        samtools sort "+folder+"{wildcards.sample}_mapped.bam > {output} \n \
+        | samtools view -bS - > {folder}{wildcards.sample}_mapped.bam \n \
+        samtools sort {folder}{wildcards.sample}_mapped.bam > {output} \n \
         samtools index {output} \n \
-        rm "+folder+"{wildcards.sample}_mapped.bam")
+        rm {folder}{wildcards.sample}_mapped.bam")

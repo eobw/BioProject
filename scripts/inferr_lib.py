@@ -177,7 +177,7 @@ def infer_single_region(genes):
     return libs
 
 def write_result(lib_dict):
-    output = open('../data/output/result.txt', 'w+')
+    output = open('../data/output/result_'+run_name+'.txt', 'w+')
     output.write("Results of library inferring: \nLibrary type \t Reads \t Percent \n")
 
     total_reads = 0
@@ -203,3 +203,4 @@ elif state == 'paired':
     result = infer_paired_region(genes)
 
 write_result(result)
+#print('Inferring successful!')
