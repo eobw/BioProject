@@ -18,6 +18,7 @@ parser.add_argument("--organism")
 parser.add_argument("--cpu", help="")
 parser.add_argument("--memory",help="")
 
+
 args=parser.parse_args()
 
 #read_basename=os.path.basename(args.reads[0])
@@ -76,9 +77,31 @@ def check_mapped():
     print("Checker for mapper has not been developed yet.")
     sys.exit()
     
-def check_ref():
+def check_reference():
     print("Checker for reference has bot been developed yet.")
     sys.exit()
+    
+def check_memory():
+    print("Checker for memory has bot been developed yet.")
+    sys.exit()
+    
+def check_cpu():
+    print("Checker for CPU has not been developed yet.")
+    sys.exit()
+
+# ---Check CPU---
+if args.cpu:
+    check_cpu()
+else:
+    # Default CPU
+    args.cpu=6
+    
+# ---Check memory---
+if args.memory:
+    check_memory()
+else:
+    # Default memory
+    args.memory=4
 
 # ---Check mapping file---
 # If a mapping file (.bam/.sam) is provided, the reference used for mapping 
@@ -88,8 +111,8 @@ if args.mapped and not args.reference:
     sys.exit()
 elif args.mapped:
     check_mapped()
-elif args.ref:
-    check_ref()
+elif args.reference:
+    check_reference()
 
 
 # ---Check organism and/or annotation---
@@ -144,4 +167,5 @@ with open("config2.json","r+") as configfile:
     configfile.truncate()
     
 # Add execution for snakefile...
-# os.system("snakemake + target files")
+#os.system("snakemake ../data/intermediate/trinity --dag | dot -Tsvg > dag.svg -forceall")
+os.system("snakemake ../data/intermediate/trinity --forceall")
