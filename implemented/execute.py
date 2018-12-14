@@ -15,7 +15,7 @@ parser.add_argument("--mapped",help="") #Maybe add this?
 parser.add_argument("--output",help="...")
 parser.add_argument("--organism")
 # These are not added to config.json yet.. 
-parser.add_argument("--cpu", help="")
+parser.add_argument("--threads", type=int,help="")
 parser.add_argument("--memory",help="")
 
 
@@ -26,6 +26,8 @@ args=parser.parse_args()
 #if len(re.split(".fq|.fastq",read_basename))!=2:
 #    print("Error. Reads are not in (zipped) fastq format.")
 #    sys.exit()
+
+# Maybe add exception class
 
 def check_organism():
     if args.organism.lower() in "prokaryote":
@@ -84,19 +86,17 @@ def check_reference():
 def check_memory():
     print("Checker for memory has bot been developed yet.")
     sys.exit()
-    
-def check_cpu():
-    print("Checker for CPU has not been developed yet.")
-    sys.exit()
+
+
     
 
 
-# ---Check CPU---
-if args.cpu:
-    check_cpu()
+# ---Check threads---
+if args.threads:
+    check_threads()
 else:
-    # Default CPU
-    args.cpu=6
+    # Default threads
+    args.threads=6
     
 # ---Check memory---
 if args.memory:
@@ -158,7 +158,7 @@ else:
 
 # add checker for fasta files
 
-# add memory and CPU options
+# add memory and threads options
 
 # Change config file
 
@@ -175,4 +175,5 @@ with open("config.json","r+") as configfile:
     
 # Add execution for snakefile...
 #os.system("snakemake ../data/intermediate/trinity --dag | dot -Tsvg > dag.svg -forceall")
-os.system("snakemake ../data/output/result_4.txt")
+#os.system("snakemake ../data/output/result_4.txt")
+os.system("snakemake ../data/intermediate/4_mapped_sorted.bam --forceall")
