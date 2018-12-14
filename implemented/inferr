@@ -11,4 +11,4 @@ rule inferr:
     output:
         '../data/output/result_{sample}.txt'
     shell:
-        "python ../scripts/inferr_lib.py {wildcards.sample} single"
+        "python ../scripts/inferr_lib.py {wildcards.sample} paired"
