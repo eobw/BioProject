@@ -19,13 +19,16 @@ rule busco_ann:
     input:
         config["input"]["reference"]
     output:
-        directory('{folder}run_{sample}/')
+        directory('{folder}run_{sample}')
     log:
         "{folder}logs/BUSCO_run_{sample}_annotation.log"
+    threads:
+        config["input"]["threads"]
     shell:
         """
-        run_busco -i {input} -l {lineage} -o {wildcards.sample} -m {mode} > {log}
-        mv run_{wildcards.sample} {folder}
-        mv tmp {folder}
+        run_busco -c {threads} -i {input} -l {lineage} -o {wildcards.sample} --tmp {folder}tmp -m {mode} | tee {log} 
+        mv {log} logs/
+        mv run_{wildcards.sample} {folder} 
         """
+        
 # Have to move since since otherwise the busco config.ini file has to be changed for other output dir
