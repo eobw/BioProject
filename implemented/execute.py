@@ -176,4 +176,4 @@ with open("config.json","r+") as configfile:
 # Add execution for snakefile...
 #os.system("snakemake ../data/intermediate/trinity --dag | dot -Tsvg > dag.svg -forceall")
 #os.system("snakemake ../data/output/result_4.txt")
-os.system("snakemake ../data/intermediate/4_mapped_sorted.bam --forceall")
+os.system("snakemake ../data/intermediate/4_mapped_sorted.bam --forceall --cores "+args.threads)
