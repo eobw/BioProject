@@ -18,7 +18,7 @@ rule trinity:
     params:
         memory=config["trinity"]["memory"],
     threads:
-        config["trinity"]["threads"]
+        config["input"]["threads"]
     log:
         "logs/trinity_assembly.log"
     run:
@@ -28,4 +28,4 @@ rule trinity:
         "+PE_SE_trinity_command()+"\
         --CPU {threads} \
         --output {output} \
-        > {log}")
+        | tee {log}")
