@@ -6,6 +6,8 @@ folder = "../data/intermediate/"
 
 rule inferr:
     input:
+        # config["bowtie2"]["mapped-file"]
+        # config["busco"]["annotation"]
         '../data/intermediate/{sample}_sorted.bam',
         '../data/intermediate/run_{sample}'
     output:
