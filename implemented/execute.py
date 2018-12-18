@@ -6,17 +6,23 @@
 
 
 import argparse, sys, json, os, re, subprocess
+from BCBio import GFF
+import pprint
 
 parser=argparse.ArgumentParser(description="Predict library type.")
-parser.add_argument("--reads",nargs="+",help="Reads in (un)zipped .fastq format.")
-parser.add_argument("--reference",help="Reference genome/transcriptome in .fasta format.")
-parser.add_argument("--annotation",help="Annotation in .gff format")
-parser.add_argument("--mapped",help="") #Maybe add this?
-parser.add_argument("--output",help="...")
-parser.add_argument("--organism")
+parser.add_argument("--reads",nargs="+",type=str,help="Reads in (un)zipped .fastq format.")
+parser.add_argument("--reference",type=str,help="Reference genome/transcriptome in .fasta format.")
+parser.add_argument("--annotation",type=str,help="Annotation in .gff format")
+parser.add_argument("--mapped",type=str,help="") #Maybe add this?
+# maybe add group..
+#group=parser.add_mutually_exclusive_group(required=True)
+#group.add_argument("--annotation",type=str,help="Annotation in .gff format")
+#group.add_argument("--organism",type=str)
+parser.add_argument("--output",type=str,help="...")
+parser.add_argument("--organism",type=str)
 # These are not added to config.json yet.. 
 parser.add_argument("--threads", type=int,help="")
-parser.add_argument("--memory",help="")
+parser.add_argument("--memory",help="Maximum memory that can be used in GB. Ex. '10G'.")
 
 
 args=parser.parse_args()
@@ -39,11 +45,15 @@ def check_organism():
         print("Error. Unrecognized organism.")
         sys.exit()
 
-def check_annotation():
-    print("Checker for annotation file is developed yet.")
-    print("Exiting...")
+def check_annotation(annotation_file):
+    in_handle=open(annotation_file)
+    for record in GFF.parse(in_handle, limit_info=dict(gff_type=["gene"])):
+        if record:
+            return 
+    # If no genes are found, gff file cannot be used in analysis.
+    print("Error. No genes could be found in --annotation "+annotation_file+". Please, submit a .gff file containing genes or no .gff file.")
     sys.exit()
-    
+
 def check_single_reads():
         checked_reads=subprocess.check_output(
         "./check_single_read_files.sh "+
@@ -79,9 +89,29 @@ def check_mapped():
     print("Checker for mapper has not been developed yet.")
     sys.exit()
     
-def check_reference():
-    print("Checker for reference has bot been developed yet.")
-    #sys.exit()
+def check_reference(ref):
+    if ".gz" in ref:
+        zip_command="zcat"
+    else:
+        zip_command="cat"
+    num_headers=subprocess.check_output(
+    zip_command+" "+ref+" | grep '^>' | wc -l",
+    shell=True,
+    encoding="utf8")
+    if int(num_headers.split("\n")[0]) > 1:
+        # Multiple headers --> dealing with transcriptome.
+        # So far we return genome anyway because we have not optimized busco for transcriptome.
+        # Need to optimize busco script!
+        # This is however a later improvement since we can lie to busco that we are dealing with genome.
+        #return "transcriptome"
+        return "genome"
+    elif int(num_headers.split("\n")[0])==1:
+        # One header --> dealing with genome.
+        return "genome"
+    else:
+        print("Error. Reference file is not in fasta format. Missing '>' in beginning of fasta header.")
+        sys.exit()
+
     
 def check_memory():
     print("Checker for memory has bot been developed yet.")
@@ -116,7 +146,7 @@ if args.mapped:
     check_mapped()
  
 if args.reference:
-    check_reference()
+    busco_reference_mode=check_reference(args.reference)
 else:
     # Add Trinity assembly to config file.
     args.reference="../data/intermediate/trinity/Trinity.fasta"
@@ -124,13 +154,18 @@ else:
 # ---Check organism and/or annotation---
 # Organism or annotation file must be provided.
 # If none is provided, we cannot look for core genes.
-if args.organism:
-    check_organism()
-elif args.annotation:
-    check_annotation()
+#if args.organism:
+#    check_organism()
+#elif args.annotation:
+#    check_annotation()
+#else:
+#    print("Error. Provide organism or annotation file.")
+#    sys.exit()
+
+if args.annotation:
+    check_annotation(args.annotation)
 else:
-    print("Error. Provide organism or annotation file.")
-    sys.exit()
+    args.annotation="standard_name_annotation"
 
 
 # ---Check reads---
@@ -169,6 +204,8 @@ with open("config.json","r+") as configfile:
     data["input"]["annotation"]=args.annotation
     data["input"]["organism"]=args.organism
     data["input"]["mapped-reads"]=args.mapped
+    data["busco"]["lineage"]=("../data/bacteria_odb9" if args.organism == "prokaryote" else "../data/eukaryota_odb9")
+    data["busco"]["mode"]=busco_reference_mode
     configfile.seek(0)
     json.dump(data,configfile,indent=4)
     configfile.truncate()
@@ -176,4 +213,4 @@ with open("config.json","r+") as configfile:
 # Add execution for snakefile...
 #os.system("snakemake ../data/intermediate/trinity --dag | dot -Tsvg > dag.svg -forceall")
 #os.system("snakemake ../data/output/result_4.txt")
-os.system("snakemake ../data/intermediate/4_mapped_sorted.bam --forceall --cores "+args.threads)
+#os.system("snakemake ../data/intermediate/4_mapped_sorted.bam --forceall --cores "+args.threads)
