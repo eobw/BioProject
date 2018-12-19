@@ -4,6 +4,8 @@
 configfile: "config.json"
 folder = "../data/intermediate/"
 
+PE_SE="paired" if len(config["input"]["reads"])==2 else "single"
+
 rule inferr:
     input:
         # config["bowtie2"]["mapped-file"]
@@ -13,4 +15,4 @@ rule inferr:
     output:
         '../data/output/result_{sample}.txt'
     shell:
-        "python ../scripts/inferr_lib.py {wildcards.sample} paired"
+        "python ../scripts/inferr_lib.py {wildcards.sample} {PE_SE}"
