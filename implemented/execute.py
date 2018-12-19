@@ -62,7 +62,7 @@ def check_single_reads():
         shell=True,
         encoding="utf8"
         )
-        if len(checked_reads.split("\n"))==2:
+        if len(checked_reads.split("\n"))==1:
             # Do nothing, data file is single end.
             pass 
         else:
