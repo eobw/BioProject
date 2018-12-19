@@ -53,5 +53,5 @@ elif [[ $fline =~ ^@.*\ 1: ]] || [[ $fline =~ ^@.*\ 2: ]]; then
 
 else
   # Single end data. Don't do anything.
-  echo 
+  : 
 fi
