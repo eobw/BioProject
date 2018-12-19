@@ -27,8 +27,9 @@ parser.add_argument("--memory",help="Maximum memory that can be used in GB. Ex. 
 
 args=parser.parse_args()
 
-#read_basename=os.path.basename(args.reads[0])
-#read_basename_no_extension=re.split(".fq|.fastq",read_basename)[0]
+# Get read_name, i.e: readname from path/to/reads/[readname].fq.gz
+#read_name=re.split(".fq|.fastq",os.path.basename(args.reads[0]))[0]
+#print(read_name)
 #if len(re.split(".fq|.fastq",read_basename))!=2:
 #    print("Error. Reads are not in (zipped) fastq format.")
 #    sys.exit()
@@ -39,10 +40,10 @@ def check_organism():
     if args.organism.lower() in "prokaryote":
         args.organism="prokaryote"
     
-    elif args. organism.lower() in "eukaryote":
+    elif args.organism.lower() in "eukaryote":
         args.organism="eukaryote"
     else: 
-        print("Error. Unrecognized organism.")
+        print("Error. Unrecognized organism --organism "+args.organism+". Only eukaryote/prokaryote are valid organism.")
         sys.exit()
 
 def check_annotation(annotation_file):
@@ -151,6 +152,7 @@ else:
     # Add Trinity assembly to config file.
     args.reference="../data/intermediate/trinity/Trinity.fasta"
 
+busco_reference_mode="genome"
 # ---Check organism and/or annotation---
 # Organism or annotation file must be provided.
 # If none is provided, we cannot look for core genes.
