@@ -172,7 +172,7 @@ if args.mapped and not args.reference:
 if args.mapped:
     check_mapped()
 else:
-    args.mapped="../data/intermediate/"+readname+"_mapped.bam"
+    args.mapped="../data/intermediate/"+readname+"_sorted.bam"
  
 if args.reference:
     busco_reference_mode=check_reference(args.reference)
@@ -228,4 +228,4 @@ with open("config.json","r+") as configfile:
 #os.system("snakemake ../data/output/result_4.txt")
 #os.system("snakemake -s bowtie2 ../data/intermediate/"+readname+"_sorted.bam --forceall")
 #os.system("snakemake -s trinity --cores "+str(args.threads))
-os.system("snakemake -s busco ../data/intermediate/run_"+readname+" --forceall")
+os.system("snakemake ../data/output/result_"+readname+".txt")

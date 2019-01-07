@@ -3,16 +3,17 @@
 
 configfile: "config.json"
 folder = "../data/intermediate/"
+readname=config["input"]["readname"]
 
 PE_SE="paired" if len(config["input"]["reads"])==2 else "single"
 
 rule inferr:
     input:
-        # config["bowtie2"]["mapped-file"]
-        # config["busco"]["annotation"]
-        '../data/intermediate/{sample}_sorted.bam',
-        '../data/intermediate/run_{sample}'
+        config["input"]["mapped-reads"],
+        config["input"]["annotation"]
+        #'../data/intermediate/{sample}_sorted.bam',
+        #'../data/intermediate/run_{sample}'
     output:
-        '../data/output/result_{sample}.txt'
+        '../data/output/result_{readname}.txt'
     shell:
-        "python ../scripts/inferr_lib.py {wildcards.sample} {PE_SE}"
+        "python ../scripts/inferr_lib.py {readname} {PE_SE}"

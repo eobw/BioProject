@@ -5,13 +5,13 @@
             "../data/input/4_mapped_r2.fastq.gz"
         ],
         "readname": "4_mapped_r1",
-        "reference": "../data/intermediate/4_mapped_r1.fasta",
-        "annotation": "standard_name_annotation",
+        "reference": "../data/input/4.fa",
+        "annotation": "../data/intermediate/run_4_mapped_r1",
         "organism": "euk",
-        "mapped-reads": null,
+        "mapped-reads": "../data/intermediate/4_mapped_r1_sorted.bam",
         "annotation-file": null,
-        "threads": 4,
-        "memory": "4G"
+        "threads": 10,
+        "memory": "8G"
     },
     "bowtie2": {
         "mapped-reads": null
