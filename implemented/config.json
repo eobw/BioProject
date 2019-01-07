@@ -1,26 +1,30 @@
 {
     "input": {
-        "reference": "../data/input/4.fa",
         "reads": [
             "../data/input/4_mapped_r1.fastq.gz",
             "../data/input/4_mapped_r2.fastq.gz"
         ],
-        "annotation": null,
-        "organism": "eukaryote",
+        "readname": "4_mapped_r1",
+        "reference": "../data/intermediate/4_mapped_r1.fasta",
+        "annotation": "standard_name_annotation",
+        "organism": "euk",
         "mapped-reads": null,
+        "annotation-file": null,
         "threads": 4,
         "memory": "4G"
     },
     "bowtie2": {
-        "threads": 4
+        "mapped-reads": null
     },
     "busco": {
         "lineage": "../data/eukaryota_odb9",
-        "mode": "genome"
+        "mode": "genome",
+        "annotation": null
     },
     "trinity": {
         "threads": 4,
-        "memory": "4G"
+        "memory": "4G",
+        "reference": null
     },
     "output": {}
 }
