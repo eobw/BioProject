@@ -5,6 +5,9 @@
 
 
 
+
+# ADD CHECKER FOR IF FILES EXIST!!!!!!!!!!!!!!!!!!!!!!!
+
 import argparse, sys, json, os, re, subprocess
 from BCBio import GFF
 import pprint
@@ -27,13 +30,6 @@ parser.add_argument("--memory",help="Maximum memory that can be used in GB. Ex. 
 
 args=parser.parse_args()
 
-# Get read_name, i.e: readname from path/to/reads/[readname].fq.gz
-#read_name=re.split(".fq|.fastq",os.path.basename(args.reads[0]))[0]
-#print(read_name)
-#if len(re.split(".fq|.fastq",read_basename))!=2:
-#    print("Error. Reads are not in (zipped) fastq format.")
-#    sys.exit()
-
 # Maybe add exception class
 
 def check_organism():
@@ -55,36 +51,41 @@ def check_annotation(annotation_file):
     print("Error. No genes could be found in --annotation "+annotation_file+". Please, submit a .gff file containing genes or no .gff file.")
     sys.exit()
 
-def check_single_reads():
-        checked_reads=subprocess.check_output(
-        "./check_single_read_files.sh "+
-        args.reads[0],
-        shell=True,
-        encoding="utf8"
-        )
-        if len(checked_reads.split("\n"))==1:
-            # Do nothing, data file is single end.
-            pass 
-        else:
-            # Interleaved paired end reads. 
-            # They have been deinterleaved with check_single_read_files.sh
-            # Store new, deinterleaved readfiles in args.reads:
-            args.format,args.reads[0]=checked_reads.split("\n")[:2]
-            args.reads.append(checked_reads.split("\n")[2])
+def check_single_reads(read):
+    if not any(x in read for x in [".fq",".fastq"]):
+        print("Error. Cannot find .fq or fastq extension in read file --read "+read+".")
+        sys.exit()
+    checked_reads=subprocess.check_output(
+    "./check_single_read_files.sh "+
+    read,
+    shell=True,
+    encoding="utf8"
+    )
+    if len(checked_reads.split("\n"))==1:
+        # Do nothing, data file is single end.
+        return [read]
+    else:
+        # Interleaved paired end reads. 
+        # They have been deinterleaved with check_single_read_files.sh
+        # Store new, deinterleaved readfiles in args.reads:
+        return checked_reads.split("\n")[1:2]
 
             
-def check_paired_reads():
-        ordered_reads=subprocess.check_output(
-        "./check_paired_read_files.sh "+
-        args.reads[0]+" "+
-        args.reads[1],
-        shell=True,
-        encoding="utf8")
-        if len(ordered_reads.split("\n"))==2:
-            print("Error. Unrecognized header format for paired end reads.")
-            sys.exit()
-        else:
-            args.format,args.reads[0],args.reads[1]=ordered_reads.split("\n")[:3]
+def check_paired_reads(read1,read2):
+    if not any(x in read1 for x in [".fq",".fastq"]) and not any(x in read2 for x in [".fq",".fastq"]):
+        print("Error. Cannot find .fq or .fastq extension in read files --read "+read1+" "+read2+".")
+        sys.exit()
+    ordered_reads=subprocess.check_output(
+    "./check_paired_read_files.sh "+
+    read1+" "+
+    read2,
+    shell=True,
+    encoding="utf8")
+    if len(ordered_reads.split("\n"))==2:
+        print("Error. Unrecognized header format for paired end reads.")
+        sys.exit()
+    else:
+        return ordered_reads.split("\n")[1:3]
 
 def check_mapped():
     print("Checker for mapper has not been developed yet.")
@@ -118,16 +119,42 @@ def check_memory():
     print("Checker for memory has bot been developed yet.")
     sys.exit()
 
+# ---Main From Here ---
+
+# ---Check reads---
+# At least one readfile must be provided. (single end or interleaved paired end reads)
+# At most two readiles can be provided. (paired end reads)
+#
+# Check if readfile is provided.
+if not args.reads:
+    print("Error. No read files provided.")
+    sys.exit()
+# Check if one read file is provided.
+elif len(args.reads)==1:
+    # Check that single reads are OK
+    # or deinterleave paired end reads. 
+    args.reads=check_single_reads(args.reads[0])
+# Check if two read files are provided.    
+elif len(args.reads)==2:
+    # Check that paired end reads are OK.
+    args.reads[0],args.reads[1]=check_paired_reads(args.reads[0],args.reads[1])    
+# Too many readfiles were provided.    
+else:
+    print("Error. Too many read files.")
+    sys.exit()
+
+# After reads have been checked, they are sorted so that read[1/left/forward] is first and read[2/right/reverse] is second.
+# Base readname on first read: 
+# Get readname, i.e: readname from path/to/reads/[readname].fq.gz
+readname=re.split(".fq|.fastq",os.path.basename(args.reads[0]))[0]
 
     
-
-
 # ---Check threads---
-if args.threads:
-    check_threads()
-else:
-    # Default threads
-    args.threads=6
+#if args.threads:
+#    check_threads()
+#else:
+#    # Default threads
+#    args.threads=6
     
 # ---Check memory---
 if args.memory:
@@ -150,7 +177,7 @@ if args.reference:
     busco_reference_mode=check_reference(args.reference)
 else:
     # Add Trinity assembly to config file.
-    args.reference="../data/intermediate/trinity/Trinity.fasta"
+    args.reference="../data/intermediate/"+readname+".fasta"
 
 busco_reference_mode="genome"
 # ---Check organism and/or annotation---
@@ -170,27 +197,7 @@ else:
     args.annotation="standard_name_annotation"
 
 
-# ---Check reads---
-# At least one readfile must be provided. (single end or interleaved paired end reads)
-# At most two readiles can be provided. (paired end reads)
-#
-# Check if readfile is provided.
-if not args.reads:
-    print("Error. No read files provided.")
-    sys.exit()
-# Check if one read file is provided.
-elif len(args.reads)==1:
-    # Check that single reads are OK
-    # or deinterleave paired end reads. 
-    check_single_reads()
-# Check if two read files are provided.    
-elif len(args.reads)==2:
-    # Check that paired end reads are OK.
-    check_paired_reads()    
-# Too many readfiles were provided.    
-else:
-    print("Error. Too many read files.")
-    sys.exit()
+
 
 
 # add checker for fasta files
@@ -203,6 +210,7 @@ with open("config.json","r+") as configfile:
     data=json.load(configfile)
     data["input"]["reference"]=args.reference
     data["input"]["reads"]=args.reads
+    data["input"]["readname"]=readname
     data["input"]["annotation"]=args.annotation
     data["input"]["organism"]=args.organism
     data["input"]["mapped-reads"]=args.mapped
@@ -215,4 +223,4 @@ with open("config.json","r+") as configfile:
 # Add execution for snakefile...
 #os.system("snakemake ../data/intermediate/trinity --dag | dot -Tsvg > dag.svg -forceall")
 #os.system("snakemake ../data/output/result_4.txt")
-#os.system("snakemake ../data/intermediate/4_mapped_sorted.bam --forceall --cores "+args.threads)
+os.system("snakemake -s trinity --cores "+str(args.threads))
