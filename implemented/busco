@@ -10,6 +10,7 @@
 
 configfile: "config.json"
 folder = "../data/intermediate/"
+readname=config["input"]["readname"]
 
 mode = config["busco"]["mode"]
 lineage = config["busco"]["lineage"]
@@ -19,16 +20,15 @@ rule busco_ann:
     input:
         config["input"]["reference"]
     output:
-        directory('{folder}run_{sample}')
+        directory(config["input"]["annotation"])
     log:
-        "{folder}logs/BUSCO_run_{sample}_annotation.log"
+        "logs/BUSCO_annotation_run_"+readname+".log"
     threads:
         config["input"]["threads"]
     shell:
         """
-        run_busco -c {threads} -i {input} -l {lineage} -o {wildcards.sample} --tmp {folder}tmp -m {mode} | tee {log} 
-        mv {log} logs/
-        mv run_{wildcards.sample} {folder} 
+        run_busco -c {threads} -i {input} -l {lineage} -o {readname} --tmp {folder}tmp -m {mode} -f | tee {log}
+        mv run_{readname} {output}
         """
         
 # Have to move since since otherwise the busco config.ini file has to be changed for other output dir
