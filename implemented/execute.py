@@ -13,19 +13,22 @@ from BCBio import GFF
 import pprint
 
 parser=argparse.ArgumentParser(description="Predict library type.")
-parser.add_argument("--reads",nargs="+",type=str,help="Reads in (un)zipped .fastq format.")
-parser.add_argument("--reference",type=str,help="Reference genome/transcriptome in .fasta format.")
-parser.add_argument("--annotation",type=str,help="Annotation in .gff format")
-parser.add_argument("--mapped",type=str,help="") #Maybe add this?
+parser._action_groups.pop()
+required=parser.add_argument_group("required arguments")
+required.add_argument("--organism",type=str)
+optional=parser.add_argument_group("optional arguments")
+required.add_argument("--reads",nargs="+",type=str,help="Reads in (un)zipped .fastq format.")
+optional.add_argument("--reference",type=str,help="Reference genome/transcriptome in .fasta format.")
+optional.add_argument("--annotation",type=str,help="Annotation in .gff format")
+optional.add_argument("--mapped",type=str,help="") #Maybe add this?
 # maybe add group..
 #group=parser.add_mutually_exclusive_group(required=True)
 #group.add_argument("--annotation",type=str,help="Annotation in .gff format")
 #group.add_argument("--organism",type=str)
-parser.add_argument("--output",type=str,help="...")
-parser.add_argument("--organism",type=str)
+optional.add_argument("--output",type=str,help="...")
 # These are not added to config.json yet.. 
-parser.add_argument("--threads", type=int, default=10,help="")
-parser.add_argument("--memory",type=str, default="8G",help="Maximum memory that can be used in GB. Ex. '10G'.")
+optional.add_argument("--threads", type=int, default=10,help="")
+optional.add_argument("--memory",type=str, default="8G",help="Maximum memory that can be used in GB. Ex. '10G'.")
 
 
 args=parser.parse_args()
@@ -114,7 +117,12 @@ def check_reference(ref):
         print("Error. Reference file is not in fasta format. Missing '>' in beginning of fasta header.")
         sys.exit()
 
-    
+def check_memory():
+    if "G" == args.memory[-1] and "0" != args.memory[0] and args.memory[:-1].isdigit():
+        return True
+    else:
+        print("Invalid --memory argument: '"+args.memory+"'. Memory should be given in GIGABYTES. For example --memory '4G'")
+        sys.exit()
 
 # ---Main From Here ---
 
@@ -188,7 +196,7 @@ else:
     args.annotation="standard_name_annotation"
 
 
-
+check_memory()
 
 
 # add checker for fasta files
