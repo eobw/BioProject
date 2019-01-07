@@ -24,8 +24,8 @@ parser.add_argument("--mapped",type=str,help="") #Maybe add this?
 parser.add_argument("--output",type=str,help="...")
 parser.add_argument("--organism",type=str)
 # These are not added to config.json yet.. 
-parser.add_argument("--threads", type=int,help="")
-parser.add_argument("--memory",help="Maximum memory that can be used in GB. Ex. '10G'.")
+parser.add_argument("--threads", type=int, default=10,help="")
+parser.add_argument("--memory",type=str, default="8G",help="Maximum memory that can be used in GB. Ex. '10G'.")
 
 
 args=parser.parse_args()
@@ -115,9 +115,6 @@ def check_reference(ref):
         sys.exit()
 
     
-def check_memory():
-    print("Checker for memory has bot been developed yet.")
-    sys.exit()
 
 # ---Main From Here ---
 
@@ -155,13 +152,7 @@ readname=re.split(".fq|.fastq",os.path.basename(args.reads[0]))[0]
 #else:
 #    # Default threads
 #    args.threads=6
-    
-# ---Check memory---
-if args.memory:
-    check_memory()
-else:
-    # Default memory
-    args.memory=4
+
 
 # ---Check mapping file---
 # If a mapping file (.bam/.sam) is provided, the reference used for mapping 
@@ -216,6 +207,8 @@ with open("config.json","r+") as configfile:
     data["input"]["mapped-reads"]=args.mapped
     data["busco"]["lineage"]=("../data/bacteria_odb9" if args.organism == "prokaryote" else "../data/eukaryota_odb9")
     data["busco"]["mode"]=busco_reference_mode
+    data["input"]["threads"]=args.threads
+    data["input"]["memory"]=args.memory
     configfile.seek(0)
     json.dump(data,configfile,indent=4)
     configfile.truncate()
