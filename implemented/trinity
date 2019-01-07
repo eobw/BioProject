@@ -33,4 +33,4 @@ rule trinity:
         --output {output.trinitydir} \
         | tee {log}")
         shell("mv ../data/intermediate/trinity/Trinity.fasta {output.renamed}")
-        shell("echo Renamed $(dirname $PWD)/data/intermediate/trinity/Trinity.fasta to $(dirname $PWD)/data/intermediate/reference"+readname+" | tee --append {log}")
+        shell("echo Renamed $(dirname $PWD)/data/intermediate/trinity/Trinity.fasta to $(dirname $PWD)/data/intermediate/"+readname+" | tee --append {log}")
