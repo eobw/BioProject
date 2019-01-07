@@ -25,10 +25,21 @@ rule busco_ann:
         "logs/BUSCO_annotation_run_"+readname+".log"
     threads:
         config["input"]["threads"]
-    shell:
-        """
+    run:
+        # Do analysis
+        shell("""
         run_busco -c {threads} -i {input} -l {lineage} -o {readname} --tmp {folder}tmp -m {mode} -f | tee {log}
         mv run_{readname} {output}
-        """
+        """)
+        
+        # Check if BUSCOs were found. If not kill the pipeline.
+        shell("""
+        if grep --quiet -P 'WARNING\tBUSCO did not find any match.' {log}; then
+            echo KILLING snakemake because no BUSCOs were found. Retry with a better reference. | tee -a {log}
+            killall snakemake
+        else
+            :
+        fi
+        """)
         
 # Have to move since since otherwise the busco config.ini file has to be changed for other output dir
