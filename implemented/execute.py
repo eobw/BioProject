@@ -171,6 +171,8 @@ if args.mapped and not args.reference:
 
 if args.mapped:
     check_mapped()
+else:
+    args.mapped="../data/intermediate/"+readname+"_mapped.bam"
  
 if args.reference:
     busco_reference_mode=check_reference(args.reference)
@@ -193,7 +195,7 @@ busco_reference_mode="genome"
 if args.annotation:
     check_annotation(args.annotation)
 else:
-    args.annotation="standard_name_annotation"
+    args.annotation="../data/intermediate/run_"+readname
 
 
 check_memory()
@@ -224,4 +226,6 @@ with open("config.json","r+") as configfile:
 # Add execution for snakefile...
 #os.system("snakemake ../data/intermediate/trinity --dag | dot -Tsvg > dag.svg -forceall")
 #os.system("snakemake ../data/output/result_4.txt")
-os.system("snakemake -s trinity --cores "+str(args.threads))
+#os.system("snakemake -s bowtie2 ../data/intermediate/"+readname+"_sorted.bam --forceall")
+#os.system("snakemake -s trinity --cores "+str(args.threads))
+os.system("snakemake -s busco ../data/intermediate/run_"+readname+" --forceall")
