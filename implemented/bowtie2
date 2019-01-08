@@ -16,7 +16,8 @@ def mapping_bowtie2_command():
 # path to index file without extension (removed .fa or .fasta)
 folder = "../data/intermediate/"
 index_basename=folder+"index/"+re.split('/|\.',config["input"]["reference"])[-2]
-sample=config["input"]["readname"]
+sample=config["input"]["readname"]+"_on_ref_"+re.split('/|\.',config["input"]["reference"])[-2]
+#sample=config["input"]["readname"]
 
 rule bowtie2_index:
     input:
@@ -39,18 +40,30 @@ rule bowtie2_map:
         # Read files
         config["input"]["reads"]
     output:
-        folder+"{sample}_sorted.bam"
+        #folder+"{sample}_sorted.bam"
+        folder+sample+"_sorted.bam"
     threads:
         config["input"]["threads"]
     log:
-        "logs/bowtie2_map_{sample}.log"
+        #"logs/bowtie2_map_{sample}.log"
+        "logs/bowtie2_map_"+sample+".log"
     run:
+        #shell("bowtie2 \
+        #-x {index_basename} \
+        #"+mapping_bowtie2_command()+"\
+        #--threads {threads} \
+        #2> >(tee {log} >&2) \
+        #| samtools view -bS - > {folder}{wildcards.sample}_mapped.bam \n \
+        #samtools sort {folder}{wildcards.sample}_mapped.bam > {output} \n \
+        #samtools index {output} \n \
+        #rm {folder}{wildcards.sample}_mapped.bam")
+        
         shell("bowtie2 \
         -x {index_basename} \
         "+mapping_bowtie2_command()+"\
         --threads {threads} \
         2> >(tee {log} >&2) \
-        | samtools view -bS - > {folder}{wildcards.sample}_mapped.bam \n \
-        samtools sort {folder}{wildcards.sample}_mapped.bam > {output} \n \
+        | samtools view -bS - > {folder}"+sample+"_mapped.bam \n \
+        samtools sort {folder}"+sample+"_mapped.bam > {output} \n \
         samtools index {output} \n \
-        rm {folder}{wildcards.sample}_mapped.bam")
+        rm {folder}"+sample+"_mapped.bam")
