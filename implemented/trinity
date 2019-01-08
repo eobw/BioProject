@@ -17,9 +17,9 @@ rule trinity:
         config["input"]["reads"]
     output:
         trinitydir=directory("../data/intermediate/trinity"),
-        renamed="../data/intermediate/references/"+readname+".fasta"
+        renamed="../data/intermediate/"+readname+".fasta"
     params:
-        memory=config["trinity"]["memory"]
+        memory=config["input"]["memory"]
     threads:
         config["input"]["threads"]
     log:

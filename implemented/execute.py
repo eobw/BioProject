@@ -63,6 +63,12 @@ def check_annotation(annotation_file):
     sys.exit()
 
 def check_single_reads(read):
+    try:
+        reader=open(read,"r")
+        reader.close()
+    except IOError:
+        print("Could not find readfile '"+read+"'. Make sure it exists.")
+        sys.exit()
     if not any(x in read for x in [".fq",".fastq"]):
         print("Error. Cannot find .fq or fastq extension in read file --read "+read+".")
         sys.exit()
@@ -83,6 +89,20 @@ def check_single_reads(read):
 
             
 def check_paired_reads(read1,read2):
+    try:
+        reader=open(read1,"r")
+        reader.close()
+    except IOError:
+        print("Could not find readfile '"+read1+"'. Make sure it exists.")
+        sys.exit()
+    
+    try:
+        reader=open(read2,"r")
+        reader.close()
+    except IOError:
+        print("Could not find readfile '"+read2+"'. Make sure it exists.")
+        sys.exit()
+        
     if not any(x in read1 for x in [".fq",".fastq"]) and not any(x in read2 for x in [".fq",".fastq"]):
         print("Error. Cannot find .fq or .fastq extension in read files --read "+read1+" "+read2+".")
         sys.exit()
@@ -100,9 +120,16 @@ def check_paired_reads(read1,read2):
 
 def check_mapped():
     print("Checker for mapper has not been developed yet.")
+    print("Right now you cannot provide a map-file (.bam).")
+    print("Therefore, skip the map-file and let GUESSmyLT do the mapping for you.")
     sys.exit()
     
 def check_reference(ref):
+    try:
+        open(ref)
+    except:
+        print("Error. Cannot open --reference '"+ref+"'. Make sure it exists.")
+        sys.exit()
     if ".gz" in ref:
         zip_command="zcat"
     else:
@@ -220,12 +247,12 @@ check_memory()
 
 with open("config.json","r+") as configfile:
     data=json.load(configfile)
-    data["input"]["reference"]=args.reference
+    data["trinity"]["reference"]=args.reference
     data["input"]["reads"]=args.reads
     data["input"]["readname"]=readname
-    data["input"]["annotation"]=args.annotation
+    data["busco"]["annotation"]=args.annotation
     data["input"]["organism"]=args.organism
-    data["input"]["mapped-reads"]=args.mapped
+    data["bowtie2"]["mapped-reads"]=args.mapped
     data["busco"]["lineage"]=("../data/bacteria_odb9" if args.organism == "prokaryote" else "../data/eukaryota_odb9")
     data["busco"]["mode"]=busco_reference_mode
     data["input"]["threads"]=args.threads
@@ -239,4 +266,4 @@ with open("config.json","r+") as configfile:
 #os.system("snakemake ../data/output/result_4.txt")
 #os.system("snakemake -s bowtie2 "+args.mapped+" --forceall")
 #os.system("snakemake -s trinity --cores "+str(args.threads))
-os.system("snakemake ../data/output/result_"+readname+".txt")
+os.system("snakemake ../data/output/result_"+readname+".txt --cores "+str(args.threads))

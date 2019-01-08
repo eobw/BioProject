@@ -15,12 +15,12 @@ readname=config["input"]["readname"]
 mode = config["busco"]["mode"]
 lineage = config["busco"]["lineage"]
 # path to index file without extension (removed .fa or .fasta)
-ref_name=re.split('/|\.',config["input"]["reference"])[-2]
+ref_name=re.split('/|\.',config["trinity"]["reference"])[-2]
 rule busco_ann:
     input:
-        config["input"]["reference"]
+        config["trinity"]["reference"]
     output:
-        directory(config["input"]["annotation"])
+        directory(config["busco"]["annotation"])
     log:
         "logs/BUSCO_annotation_run_"+readname+".log"
     threads:
