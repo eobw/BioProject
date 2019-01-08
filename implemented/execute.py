@@ -12,11 +12,19 @@ import argparse, sys, json, os, re, subprocess
 from BCBio import GFF
 import pprint
 
+def is_valid_file(parser,arg):
+    if not os.path.exists(arg):
+        parser.error("The file %s does not exists!" % arg)
+    else:
+        return open(arg,'r')
+        
+
 parser=argparse.ArgumentParser(description="Predict library type.")
 parser._action_groups.pop()
 required=parser.add_argument_group("required arguments")
 required.add_argument("--organism",type=str)
 optional=parser.add_argument_group("optional arguments")
+#required.add_argument("--reads",nargs="+",type=lambda x: is_valid_file(parser,x),help="Reads in (un)zipped .fastq format.")
 required.add_argument("--reads",nargs="+",type=str,help="Reads in (un)zipped .fastq format.")
 optional.add_argument("--reference",type=str,help="Reference genome/transcriptome in .fasta format.")
 optional.add_argument("--annotation",type=str,help="Annotation in .gff format")
@@ -169,16 +177,19 @@ if args.mapped and not args.reference:
     print("Error. If a mapping file is provided, the reference used for mapping must also be provided.")
     sys.exit()
 
-if args.mapped:
-    check_mapped()
-else:
-    args.mapped="../data/intermediate/"+readname+"_sorted.bam"
  
 if args.reference:
     busco_reference_mode=check_reference(args.reference)
 else:
     # Add Trinity assembly to config file.
     args.reference="../data/intermediate/"+readname+".fasta"
+
+
+if args.mapped:
+    check_mapped()
+else:
+    #args.mapped="../data/intermediate/"+readname+"_sorted.bam"
+    args.mapped="../data/intermediate/"+readname+"_on_ref_"+re.split('/|\.',args.reference)[-2]+"_sorted.bam"
 
 busco_reference_mode="genome"
 # ---Check organism and/or annotation---
@@ -195,7 +206,7 @@ busco_reference_mode="genome"
 if args.annotation:
     check_annotation(args.annotation)
 else:
-    args.annotation="../data/intermediate/run_"+readname
+    args.annotation="../data/intermediate/run_"+re.split('/|\.',args.reference)[-2]
 
 
 check_memory()
@@ -226,6 +237,6 @@ with open("config.json","r+") as configfile:
 # Add execution for snakefile...
 #os.system("snakemake ../data/intermediate/trinity --dag | dot -Tsvg > dag.svg -forceall")
 #os.system("snakemake ../data/output/result_4.txt")
-#os.system("snakemake -s bowtie2 ../data/intermediate/"+readname+"_sorted.bam --forceall")
+#os.system("snakemake -s bowtie2 "+args.mapped+" --forceall")
 #os.system("snakemake -s trinity --cores "+str(args.threads))
 os.system("snakemake ../data/output/result_"+readname+".txt")
