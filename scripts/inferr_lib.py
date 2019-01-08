@@ -20,7 +20,7 @@ def extract_genes(run_name):
     '''
 
     file_tsv = open("../data/intermediate/run_"+run_name+"/full_table_"+run_name+".tsv", 'r')
-
+    
     # Extract BUSCO IDs, start and end from table of hits into SeqRecord object, each BUSCO as a SeqFeature
     busco_record = SeqRecord(seq='', id='hits')
     for line in file_tsv.readlines():
@@ -190,12 +190,17 @@ def write_result(lib_dict):
 
 # ---------- RUNNING ----------
 
-run_name = sys.argv[1]
-state = sys.argv[2]
+reference = sys.argv[1]
+mapped_reads = sys.argv[2]
+run_name = sys.argv[3]
+state = sys.argv[4]
 
-samfile = pysam.AlignmentFile("../data/intermediate/"+run_name+"_sorted.bam", "rb")
 
-genes = extract_genes(run_name)
+
+
+samfile = pysam.AlignmentFile(mapped_reads, "rb")
+
+genes = extract_genes(reference)
 
 if state == 'single':
     result = infer_single_region(genes)
