@@ -1,23 +1,24 @@
 {
     "input": {
         "reads": [
-            "../data/input/4_mapped_r2.fastq.gz"
+            "../data/input/fly.r1.fastq.gz",
+            "../data/input/fly.r2.fastq.gz"
         ],
-        "readname": "4_mapped_r2",
+        "readname": "fly.r1",
         "organism": "euk",
-        "threads": 1,
+        "threads": 10,
         "memory": "8G"
     },
     "bowtie2": {
-        "mapped-reads": "../data/intermediate/4_mapped_r2_on_ref_4_mapped_r2_sorted.bam"
+        "mapped-reads": "../data/intermediate/fly.r1_on_ref_r1_sorted.bam"
     },
     "busco": {
         "lineage": "../data/eukaryota_odb9",
         "mode": "genome",
-        "annotation": "../data/intermediate/run_4_mapped_r2"
+        "annotation": "../data/intermediate/run_r1"
     },
     "trinity": {
-        "reference": "../data/intermediate/4_mapped_r2.fasta"
+        "reference": "../data/intermediate/fly.r1.fasta"
     },
     "output": {}
 }

@@ -11,13 +11,7 @@
 import argparse, sys, json, os, re, subprocess
 from BCBio import GFF
 import pprint
-
-def is_valid_file(parser,arg):
-    if not os.path.exists(arg):
-        parser.error("The file %s does not exists!" % arg)
-    else:
-        return open(arg,'r')
-        
+import gzip
 
 parser=argparse.ArgumentParser(description="Predict library type.")
 parser._action_groups.pop()
@@ -106,12 +100,84 @@ def check_paired_reads(read1,read2):
     if not any(x in read1 for x in [".fq",".fastq"]) and not any(x in read2 for x in [".fq",".fastq"]):
         print("Error. Cannot find .fq or .fastq extension in read files --read "+read1+" "+read2+".")
         sys.exit()
+    
+    if read1.endswith(".gz"):
+        with gzip.open(read1,"rt") as f:
+            fline1=f.readline()
+    else:
+        with open(read1,"r") as f:
+            fline1=f.readline()
+            
+    if read2.endswith(".gz"):
+        with gzip.open(read2,"rt") as f:
+            fline2=f.readline()
+    else:
+        with open(read2,"r") as f:
+            fline2=f.readline()
+            
+    # Check format.
+    # Either Illumina1.8+: @<instrument>:<run number>:<flowcell ID>:<lane>:<tile>:<xpos>:<y-pos> <read>:<is filtered>:<control number>:<index>
+    # Or Illumina1.8-: @<machine_id>:<lane>:<tile>:<x_coord>:<y_coord>#<index>/<read>
+    format="Unknown"
+    
+    if re.match("^@.+/1",fline1) and re.match("^@.+/2",fline2):
+        format="Old Illumina (Illumina1.8-)"
+        pass
+    elif re.match("^@.+/2",fline1) and re.match("^@.+/1",fline2):
+        read1,read2=read2,read1
+        format="Old Illumina (Illumina1.8-)"
+    
+    elif re.match("^@.*\ 1:",fline1) and re.match("^@.*\ 2:",fline2):
+        format="New Illumina (Illumina1.8+)"
+        pass
+    elif re.match("^@.*\ 2:",fline1) and re.match("^@.*\ 1:",fline2):
+        format="New Illumina (Illumina1.8+)"
+        read1,read2=read2,read1
+        
+    print("Based on read headers we are working with format: "+format)
+    
+    if re.search(" ",fline1) and re.search(" ",fline2) and not args.reference:
+        # Trinity cannot handle whitespaces in fastq-headers.
+        # Therefore, if Trinity is to be executed (when no reference is given),
+        # we need to replace the whitespaces with e.g. "_"
+        print("WARNING. Noticed whitespaces in headers of files: "+read1+", "+read2+".")
+        print("Trinity cannot handle this format.")
+        print("\n\nWould you like to change the header format of your read files?")
+        print("Whitespaces (' ') in every header will be substituded with underscores ('_').")
+        print("Proceed? (y/n)")
+        # if command.small in "no":
+            #print("Since you choose no, Trinity cannot be utilized and the pipeline cannot proceed.")
+            #print("Either change the read headers manually so that no whitespaces appears or \
+            # provide a reference so that assembly step (Trinity) can be skipped.")
+            #sys.exit()
+        #else:
+            #pass
+        
+        
+        #os.system("zcat "+read1+" | sed -i -e '/^@/s/ /_/g' "+read1)
+        os.system("""
+        f="""+read1+"""
+        cp "$f" "$f~" &&
+        gzip -cd "$f~" | sed '/^@/s/ /_/g' | gzip > "$f"
+        """)
+        
+        os.system("""
+        f="""+read2+"""
+        cp "$f" "$f~" &&
+        gzip -cd "$f~" | sed '/^@/s/ /_/g' | gzip > "$f"
+        """)
+        
+        
+ 
+    return read1,read2
     ordered_reads=subprocess.check_output(
     "./check_paired_read_files.sh "+
     read1+" "+
     read2,
     shell=True,
     encoding="utf8")
+    print(ordered_reads)
+    
     if len(ordered_reads.split("\n"))==2:
         print("Error. Unrecognized header format for paired end reads.")
         sys.exit()
@@ -178,6 +244,7 @@ elif len(args.reads)==1:
 elif len(args.reads)==2:
     # Check that paired end reads are OK.
     args.reads[0],args.reads[1]=check_paired_reads(args.reads[0],args.reads[1])    
+    
 # Too many readfiles were provided.    
 else:
     print("Error. Too many read files.")
