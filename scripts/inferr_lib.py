@@ -20,7 +20,7 @@ def extract_genes(run_name):
     '''
 
     file_tsv = open("../data/intermediate/run_"+run_name+"/full_table_"+run_name+".tsv", 'r')
-    
+
     # Extract BUSCO IDs, start and end from table of hits into SeqRecord object, each BUSCO as a SeqFeature
     busco_record = SeqRecord(seq='', id='hits')
     for line in file_tsv.readlines():
@@ -137,12 +137,20 @@ def infer_single_region(genes):
     """
 
     libs = {
-        'f_first': 0,
-        'f_second': 0,
-        'r_first': 0,
-        'r_second': 0,
+        'f_first1': 0,
+        'f_second1': 0,
+        'r_first1': 0,
+        'r_second1': 0,
+        'f_first2': 0,
+        'f_second2': 0,
+        'r_first2': 0,
+        'r_second2': 0,
         'undecided': 0
     }
+
+    og_reads = ''
+    for read in open("/home/hampus/BioProject/data/input/f-firststrand/SRR3921759_ffs.fastq", "r"):
+        og_reads = og_reads+read
 
     for gene in genes.features:
         contig = gene.id
@@ -156,19 +164,33 @@ def infer_single_region(genes):
             if not read.is_unmapped:
                 reads.append(read)
 
-
         # Check lib-type of reads
         for read in reads:
             try:
+                flag = read.query_sequence in og_reads
                 lib = ''
-                if strand == 1 and not read.is_reverse:
-                    lib += 'f_second'
-                elif strand == 1 and read.is_reverse:
-                    lib += 'f_first'
-                elif strand == -1 and not read.is_reverse:
-                    lib += 'r_first'
-                elif strand == -1 and read.is_reverse:
-                    lib += 'r_second'
+                if strand == 1:
+                    if flag and not read.is_reverse:
+                        lib += 'r_first1'
+                    elif not flag and read.is_reverse:
+                        lib += 'f_first1'
+                    elif flag and read.is_reverse:
+                        lib += 'r_second1'
+                    elif not flag and not read.is_reverse:
+                        lib += 'f_second1'
+                    else:
+                        lib = 'undecided'
+                elif strand == -1:
+                    if not flag and read.is_reverse:
+                        lib += 'f_second2'
+                    elif flag and  not read.is_reverse:
+                        lib += 'f_first2'
+                    elif flag and read.is_reverse:
+                        lib += 'r_first2'
+                    elif not flag and  not read.is_reverse:
+                        lib += 'r_second2'
+                    else:
+                        lib = 'undecided'
                 else:
                     print(read)
                     lib = 'undecided'
