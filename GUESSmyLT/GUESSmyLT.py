@@ -341,4 +341,4 @@ def main():
     os.system("snakemake -s "+script_dir+"/Snakefile -d "+script_dir+" ../data/output/result_"+readname+".txt --cores "+str(args.threads))
 
 if __name__ == "__main__":
-    __main__.main()
+    main()
