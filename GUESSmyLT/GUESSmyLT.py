@@ -1,3 +1,4 @@
+#!/usr/bin/env python3.6
 # Top script for pipeline.
 # Execute with: python execute.py --reads read1 (read2) --organism pro/euk
 # For more options type: python execute.py --help
@@ -13,27 +14,6 @@ from BCBio import GFF
 import pprint
 import gzip
 
-parser=argparse.ArgumentParser(description="Predict library type.")
-parser._action_groups.pop()
-required=parser.add_argument_group("required arguments")
-required.add_argument("--organism",type=str)
-optional=parser.add_argument_group("optional arguments")
-#required.add_argument("--reads",nargs="+",type=lambda x: is_valid_file(parser,x),help="Reads in (un)zipped .fastq format.")
-required.add_argument("--reads",nargs="+",type=str,help="Reads in (un)zipped .fastq format.")
-optional.add_argument("--reference",type=str,help="Reference genome/transcriptome in .fasta format.")
-optional.add_argument("--annotation",type=str,help="Annotation in .gff format")
-optional.add_argument("--mapped",type=str,help="") #Maybe add this?
-# maybe add group..
-#group=parser.add_mutually_exclusive_group(required=True)
-#group.add_argument("--annotation",type=str,help="Annotation in .gff format")
-#group.add_argument("--organism",type=str)
-optional.add_argument("--output",type=str,help="...")
-# These are not added to config.json yet..
-optional.add_argument("--threads", type=int, default=10,help="")
-optional.add_argument("--memory",type=str, default="8G",help="Maximum memory that can be used in GB. Ex. '10G'.")
-
-
-args=parser.parse_args()
 
 # Maybe add exception class
 
@@ -218,7 +198,7 @@ def check_reference(ref):
         print("Error. Reference file is not in fasta format. Missing '>' in beginning of fasta header.")
         sys.exit()
 
-def check_memory():
+def check_memory(args):
     if "G" == args.memory[-1] and "0" != args.memory[0] and args.memory[:-1].isdigit():
         return True
     else:
@@ -229,6 +209,29 @@ def check_memory():
 
 def main():
 
+    parser=argparse.ArgumentParser(description="Predict library type.")
+    parser._action_groups.pop()
+    required=parser.add_argument_group("required arguments")
+    required.add_argument("--organism",type=str)
+    optional=parser.add_argument_group("optional arguments")
+    #required.add_argument("--reads",nargs="+",type=lambda x: is_valid_file(parser,x),help="Reads in (un)zipped .fastq format.")
+    required.add_argument("--reads",nargs="+",type=str,help="Reads in (un)zipped .fastq format.")
+    optional.add_argument("--reference",type=str,help="Reference genome/transcriptome in .fasta format.")
+    optional.add_argument("--annotation",type=str,help="Annotation in .gff format")
+    optional.add_argument("--mapped",type=str,help="") #Maybe add this?
+    # maybe add group..
+    #group=parser.add_mutually_exclusive_group(required=True)
+    #group.add_argument("--annotation",type=str,help="Annotation in .gff format")
+    #group.add_argument("--organism",type=str)
+    optional.add_argument("--output",type=str,help="...")
+    # These are not added to config.json yet..
+    optional.add_argument("--threads", type=int, default=10,help="")
+    optional.add_argument("--memory",type=str, default="8G",help="Maximum memory that can be used in GB. Ex. '10G'.")
+
+
+    args=parser.parse_args()
+
+    script_dir = os.path.expanduser('~/BioProject/GUESSmyLT')
     # ---Check reads---
     # At least one readfile must be provided. (single end or interleaved paired end reads)
     # At most two readiles can be provided. (paired end reads)
@@ -305,7 +308,7 @@ def main():
         args.annotation="../data/intermediate/run_"+re.split('/|\.',args.reference)[-2]
 
 
-    check_memory()
+    check_memory(args)
 
 
     # add checker for fasta files
@@ -313,8 +316,8 @@ def main():
     # add memory and threads options
 
     # Change config file
-
-    with open("config.json","r+") as configfile:
+    config_path = script_dir+"/config.json"
+    with open(config_path,"r+") as configfile:
         data=json.load(configfile)
         data["trinity"]["reference"]=args.reference
         data["input"]["reads"]=args.reads
@@ -335,8 +338,7 @@ def main():
     #os.system("snakemake ../data/output/result_4.txt")
     #os.system("snakemake -s bowtie2 "+args.mapped+" --forceall")
     #os.system("snakemake -s trinity --cores "+str(args.threads))
-    os.system("snakemake ../data/output/result_"+readname+".txt --cores "+str(args.threads))
+    os.system("snakemake -s "+script_dir+"/Snakefile -d "+script_dir+" ../data/output/result_"+readname+".txt --cores "+str(args.threads))
 
 if __name__ == "__main__":
-    import sys
-    main()
+    __main__.main()
