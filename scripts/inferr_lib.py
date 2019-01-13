@@ -58,6 +58,7 @@ def extract_genes(run_name):
                     break
 
     file_gff.close()
+    print("Number of genes extracted: %d\n" % (len(correct_genes.features)))
     return correct_genes
 
 def infer_paired_region(genes):
@@ -200,7 +201,8 @@ def infer_single_region(genes):
 
 def write_result(lib_dict):
     output = open('../data/output/result_'+run_name+'.txt', 'w+')
-    output.write("Results of library inferring: \nLibrary type \t Reads \t Percent \n")
+    output.write("Results of library inferring "+run_name+": \nLibrary type \t Reads \t Percent \n")
+    print("Results of library inferring: \nLibrary type \t Reads \t Percent \n")
 
     total_reads = 0
     for i in lib_dict:
@@ -209,6 +211,7 @@ def write_result(lib_dict):
     for i in lib_dict:
         percent = '{:.1%}'.format(lib_dict[i]/total_reads)
         output.write("%s \t %d \t %s\n" % (i, lib_dict[i], percent))
+        print("%s \t %d \t %s\n" % (i, lib_dict[i], percent))
 
 # ---------- RUNNING ----------
 
@@ -222,12 +225,17 @@ state = sys.argv[4]
 
 samfile = pysam.AlignmentFile(mapped_reads, "rb")
 
+print("Extracting genes...")
 genes = extract_genes(reference)
 
 if state == 'single':
+    print("Running single end inferring")
     result = infer_single_region(genes)
 elif state == 'paired':
+    print("Running paired end inferring")
     result = infer_paired_region(genes)
 
+
+print("Prediction finished:\n")
 write_result(result)
-#print('Inferring successful!')
+print("Results also written to file data/output/result_"+run_name+".txt")
