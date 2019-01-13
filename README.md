@@ -4,7 +4,7 @@
 Python 3, biopython, bcbio-gff, pysam, Trinity, BUSCO, Bowtie2, Snakemake
 
 ## Installation
-Installation is not necessary, it only adds the ability to run the tool usign the command 'GUESSmyLT' globally. Tool can be used by running the python script 'GUESSmyLT.py' from within the tool folder.
+Installation is not necessary, it adds the ability to run the tool using the command 'GUESSmyLT' globally. Tool can be used by running the python script 'GUESSmyLT.py' from within the tool folder.
 
 #### Installation with git:
 
