@@ -5,7 +5,9 @@ $ inferr_lib.py [run_name] [single OR paired]
 
 import sys
 import re
+from difflib import SequenceMatcher
 from BCBio import GFF
+from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation
@@ -149,9 +151,9 @@ def infer_single_region(genes):
         'undecided': 0
     }
 
-    og_reads = ''
-    for read in open("/home/hampus/BioProject/data/input/f-firststrand/SRR3921759_ffs.fastq", "r"):
-        og_reads = og_reads+read
+    og_reads = {}
+    for record in SeqIO.parse(run_path, "fastq"):
+        og_reads[record.id]= str(record.seq)
 
     for gene in genes.features:
         contig = gene.id
@@ -167,18 +169,22 @@ def infer_single_region(genes):
 
         # Check lib-type of reads
         for read in reads:
+            print("Query: %s" % (read.query_sequence))
+            print("Reads: %s" % (og_reads[read.query_name]))
             try:
-                flag = read.query_sequence in og_reads
+                flag = SequenceMatcher(None, og_reads[read.query_name], read.query_sequence).ratio() >= 0.8
+                print(flag)
+
                 lib = ''
                 if strand == 1:
                     if flag and not read.is_reverse:
-                        lib += 'r_first1'
+                        lib += 'f_second1'
                     elif not flag and read.is_reverse:
                         lib += 'f_first1'
                     elif flag and read.is_reverse:
                         lib += 'r_second1'
                     elif not flag and not read.is_reverse:
-                        lib += 'f_second1'
+                        lib += 'r_first1'
                     else:
                         lib = 'undecided'
                 elif strand == -1:
@@ -218,7 +224,8 @@ def write_result(lib_dict):
 reference = sys.argv[1]
 mapped_reads = sys.argv[2]
 run_name = sys.argv[3]
-state = sys.argv[4]
+run_path = sys.argv[4]
+state = sys.argv[5]
 
 
 
