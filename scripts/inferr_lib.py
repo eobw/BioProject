@@ -165,8 +165,6 @@ def infer_single_region(genes):
 
         # Check lib-type of reads
         for read in reads:
-            print("Query: %s" % (read.query_sequence))
-            print("Reads: %s" % (og_reads[read.query_name]))
             try:
                 flag = SequenceMatcher(None, og_reads[read.query_name], read.query_sequence).ratio() >= 0.8
                 lib = ''
