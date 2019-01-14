@@ -6,6 +6,7 @@ folder = "../data/intermediate/"
 reference=re.split('/|\.',config["trinity"]["reference"])[-2]
 mapped_reads=config["bowtie2"]["mapped-reads"]
 readname=config["input"]["readname"]
+readpath=config["input"]["reads"][0]
 
 PE_SE="paired" if len(config["input"]["reads"])==2 else "single"
 
@@ -16,4 +17,4 @@ rule inferr:
     output:
         '../data/output/result_{readname}.txt'
     shell:
-        "python ../scripts/inferr_lib.py {reference}  {mapped_reads} {readname} {PE_SE} "
+        "python ../scripts/inferr_lib.py {reference}  {mapped_reads} {readname} {readpath} {PE_SE} "
