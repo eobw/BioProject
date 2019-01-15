@@ -11,10 +11,8 @@ PE_SE="paired" if len(config["input"]["reads"])==2 else "single"
 
 rule inferr:
     input:
-        config["bowtie2"]["mapped-reads"],
-        config["busco"]["annotation"]
-        #'../data/intermediate/{sample}_sorted.bam',
-        #'../data/intermediate/run_{sample}'
+        config["busco"]["annotation"],
+        config["bowtie2"]["mapped-reads"]
     output:
         '../data/output/result_{readname}.txt'
     shell:
