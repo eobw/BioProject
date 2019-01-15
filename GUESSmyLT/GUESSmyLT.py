@@ -63,15 +63,26 @@ def check_annotation(annotation_file):
 
 def change_header_format(read,num):
     num=str(num)
+    
+    fixed_header=read
+    zip_command="cat"
     if read.endswith(".gz"):
-        os.system("""
-        f="""+read+"""
-        cp "$f" "$f~" &&
-        gzip -cd "$f~" | sed '/^@.* /s/[ ].*/\/"""+num+"""/g' | gzip > "$f"
-        rm "$f~"
-        """)
+        zip_command="zcat"
     else:
-        os.system("sed -i -e '/^@.* /s/[ ].*/\/"+num+"/g' | gzip > "+read)    
+        fixed_header=read+".gz"
+    
+    fline=get_first_line(read)
+    if re.match("^@.+\.\d+\.\d ",fline):
+        os.system(zip_command+" "+read+" | sed '/^@/s/\./:/g; /^@/s/:[0-9] .*/\/"+num+"/g' | gzip > "+fixed_header)    
+        #os.system(zip_command+" "+read+" | sed '/^@/s/\./:/g; /^@/s/:[0-9] .*/\/"+num+"/g'")
+    elif re.match("^@.+ ",fline) and "." in fline:
+        os.system(zip_command+" "+read+" | sed '/^@/s/\./:/g; /^@/s/ .*/\/"+num+"/g' | gzip > "+fixed_header)
+        #os.system(zip_command+" "+read+" | sed '/^@/s/\./:/g; /^@/s/ .*/\/"+num+"/g' ")
+    else:
+        os.system(zip_command+" "+read+" | sed '/^@/s/ .*/\/"+num+"/g' | gzip > "+fixed_header)
+        #os.system(zip_command+" "+read+" | sed '/^@/s/ .*/\/"+num+"/g' | gzip > "+fixed_header)
+    return fixed_header    
+
 
 def check_single_reads(read,args):
             
@@ -132,14 +143,14 @@ def check_single_reads(read,args):
             
         if re.match("^@.+ 1:", line) and re.match("^@.+ 2:",line):
             print("Extracting left reads of '"+read+"' to '"+deinterleaved1+"'.")
-            os.system(zip_command+" "+read+" | awk '/^@.*[ ]1:/{c=4} c&&c--' | gzip --stdout > "+deinterleaved+".r1.fastq.gz")
+            os.system(zip_command+" "+read+" | awk '/^@.*[ ]1:/{c=4} c&&c--' | gzip --stdout > "+deinterleaved)
             print("Extracting right reads of '"+read+"' to '"+deinterleaved1+"'.")
-            os.system(zip_command+" "+read+" | awk '/^@.*[ ]2:/{c=4} c&&c--' | gzip --stdout > "+deinterleaved+".r2.fastq.gz")
+            os.system(zip_command+" "+read+" | awk '/^@.*[ ]2:/{c=4} c&&c--' | gzip --stdout > "+deinterleaved)
         elif re.match("^@.+/1",line) and re.match("^@.+/2",line):
             print("Extracting left reads of '"+read+"' to '"+deinterleaved1+"'.")
-            os.system(zip_command+" "+read+" | awk '/^@.*[/]1/{c=4} c&&c--' | gzip --stdout > "+deinterleaved+".r1.fastq.gz")
+            os.system(zip_command+" "+read+" | awk '/^@.*[/]1/{c=4} c&&c--' | gzip --stdout > "+deinterleaved)
             print("Extracting right reads of '"+read+"' to '"+deinterleaved2+"'.")
-            os.system(zip_command+" "+read+" | awk '/^@.*[/]2/{c=4} c&&c--' | gzip --stdout > "+deinterleaved+".r2.fastq.gz")
+            os.system(zip_command+" "+read+" | awk '/^@.*[/]2/{c=4} c&&c--' | gzip --stdout > "+deinterleaved)
         else:
             # Assuming that interleaved reads in a file are alternating.
             # This extraction can be written with a one line command:
@@ -147,16 +158,16 @@ def check_single_reads(read,args):
             # The command works if you execute it from the command line, but not using os.system.
             # Right now, two lines are used, and this part can be optimized.
             print("Extracting left reads of '"+read+"' to '"+deinterleaved1+"'.")
-            os.system(zip_command+""" """+read+""" | paste - - - - - - - - | cut -f 1-4 | tr "\t" "\n" | gzip > """+deinterleaved1)
+            os.system(zip_command+' '+read+' | paste - - - - - - - - | cut -f 1-4 | tr "\t" "\n" | gzip > '+deinterleaved1)
             print("Extracting right reads of '"+read+"' to '"+deinterleaved2+"'.")
-            os.system(zip_command+""" """+read+""" | paste - - - - - - - - | cut -f 5-8 | tr "\t" "\n" | gzip > """+deinterleaved2)
+            os.system(zip_command+" "+read+""" | paste - - - - - - - - | cut -f 5-8 | tr "\t" "\n" | gzip > """+deinterleaved2)
         
-        if " " in get_first_line(read):
-            print("Detected whitespaces in read file headers.")
-            print("Substituting whitespaces in deinterleaved read file: "+deinterleaved1)
-            change_header_format(deinterleaved1,1)
-            print("Substituting whitespaces in deinterleaved read file: "+deinterleaved2)
-            change_header_format(deinterleaved2,2)
+        #if " " in get_first_line(read):
+        #    print("Detected whitespaces in read file headers.")
+        #    print("Substituting whitespaces in deinterleaved read file: "+deinterleaved1)
+        #    deinterleaved1=change_header_format(deinterleaved1,1)
+        #    print("Substituting whitespaces in deinterleaved read file: "+deinterleaved2)
+        #    deinterleaved2=change_header_format(deinterleaved2,2)
         
         return deinterleaved1,deinterleaved2
     
@@ -168,8 +179,8 @@ def check_single_reads(read,args):
         read1,read2=deinterleave(read,fline)
         if not args.reference:
             if " " in get_first_line(read1) or " " in get_first_line(read2):
-                change_header_format(read1,1)
-                change_header_format(read2,2)
+                read1=change_header_format(read1,1)
+                read2=change_header_format(read2,2)
             
         return read1,read2
     
@@ -190,7 +201,7 @@ def check_single_reads(read,args):
                     continue
             if decision.lower() in "yes":
                 print("Substituting whitespaces with colons in headers of read file: "+read)
-                change_header_format(read,1)
+                read=change_header_format(read,1)
 
             else: # decision = 'no'
                 print("No substitution will be done. Therefore Trinity cannot be executed and GUESSmyLT cannot continue.")
@@ -258,11 +269,11 @@ def check_paired_reads(read1,read2,args):
     if re.search(" ",fline1) and re.search(" ",fline2) and not args.reference:
         # Trinity cannot handle whitespaces in fastq-headers.
         # Therefore, if Trinity is to be executed (when no reference is given),
-        # we need to replace the whitespaces with e.g. "_"
+        # we need to change the fastq headers so that they have old illumina format.
         print("WARNING. Noticed whitespaces in headers of files: "+read1+", "+read2+".")
         print("Trinity cannot handle this format.")
         print("Would you like to change the header format of your read files?")
-        print("Whitespaces (' ') in every header will be substituded with colons (':').")
+        print("Every header will be changed to old Illumina fastq format: substituded with colons (':').")
         while True:
             decision=input("Proceed? (y/n): ")
             if decision.lower() in "yes" or decision.lower() in "no":
@@ -272,9 +283,9 @@ def check_paired_reads(read1,read2,args):
 
         if decision.lower() in "yes":
             print("Substituting whitespaces with colons in headers of read file: "+read1)
-            change_header_format(read1,1)
+            read1=change_header_format(read1,1)
             print("Substituting whitespaces with colons in headers of read file: "+read2)    
-            change_header_format(read2,2)
+            read2=change_header_format(read2,2)
         
         else: # decision = 'no'
             print("No substitution will be done. Therefore Trinity cannot be executed and GUESSmyLT cannot continue.")
@@ -354,7 +365,8 @@ def main():
 
 
     args=parser.parse_args()
-
+    
+    
     script_dir = os.path.expanduser('~/BioProject/GUESSmyLT')
     # ---Check reads---
     # At least one readfile must be provided. (single end or interleaved paired end reads)
@@ -440,7 +452,7 @@ def main():
     # add memory and threads options
 
     # Change config file
-    #script_dir="."
+    script_dir="."
     config_path = script_dir+"/config.json"
     with open(config_path,"r+") as configfile:
         data=json.load(configfile)
