@@ -60,18 +60,20 @@ def check_annotation(annotation_file):
     print("Error. No genes could be found in --annotation "+annotation_file+". Please, submit a .gff file containing genes or no .gff file.")
     sys.exit()
 
-def whitespace2underscore(read):
+
+def change_header_format(read,num):
+    num=str(num)
     if read.endswith(".gz"):
         os.system("""
         f="""+read+"""
         cp "$f" "$f~" &&
-        gzip -cd "$f~" | sed '/^@/s/ /_/g' | gzip > "$f"
+        gzip -cd "$f~" | sed '/^@.* /s/[ ].*/\/"""+num+"""/g' | gzip > "$f"
         rm "$f~"
         """)
     else:
-        os.system("sed -i -e '/^@/s/ /_/g' "+read)
+        os.system("sed -i -e '/^@.* /s/[ ].*/\/"+num+"/g' | gzip > "+read)    
 
-def check_single_reads(read):
+def check_single_reads(read,args):
             
     def is_interleaved(read,pattern1,pattern2):
         
@@ -111,12 +113,19 @@ def check_single_reads(read):
     
     def deinterleave(read,line):
         print("Found interleaved reads in read file: "+read+".")
-        print("Deinterleaving data.")
+        
         readname=re.split(".fq|.fastq",os.path.basename(read))[0]
         deinterleaved="../data/input/deinterleaved."+readname
         deinterleaved1=deinterleaved+".r1.fastq.gz"
         deinterleaved2=deinterleaved+".r2.fastq.gz"
         
+        if os.path.exists(deinterleaved1) and os.path.exists(deinterleaved2):
+            print("Already found existing deinterleaved files for read file: "+read)
+            print("Continuing run with '"+deinterleaved1+"' and '"+deinterleaved2+"'.")
+            return deinterleaved1,deinterleaved2
+        
+        
+        print("Deinterleaving data.")
         zip_command="cat"
         if read.endswith(".gz"):
             zip_command="zcat"
@@ -138,21 +147,18 @@ def check_single_reads(read):
             # The command works if you execute it from the command line, but not using os.system.
             # Right now, two lines are used, and this part can be optimized.
             print("Extracting left reads of '"+read+"' to '"+deinterleaved1+"'.")
-            #os.system("""paste - - - - - - - - < """+read+""" | cut -f 1-4 | tr "\t" "\n" | gzip > """+deinterleaved1)
             os.system(zip_command+""" """+read+""" | paste - - - - - - - - | cut -f 1-4 | tr "\t" "\n" | gzip > """+deinterleaved1)
             print("Extracting right reads of '"+read+"' to '"+deinterleaved2+"'.")
             os.system(zip_command+""" """+read+""" | paste - - - - - - - - | cut -f 5-8 | tr "\t" "\n" | gzip > """+deinterleaved2)
-            #os.system("""paste - - - - - - - - < """+read+""" | cut -f 5-8 | tr "\t" "\n" | gzip > """+deinterleaved2)
         
         if " " in get_first_line(read):
             print("Detected whitespaces in read file headers.")
             print("Substituting whitespaces in deinterleaved read file: "+deinterleaved1)
-            whitespace2underscore(deinterleaved1)
-            print("Substituting whitespaces in deinterleaved read file: "+deinterleaved1)
-            whitespace2underscore(deinterleaved2)    
+            change_header_format(deinterleaved1,1)
+            print("Substituting whitespaces in deinterleaved read file: "+deinterleaved2)
+            change_header_format(deinterleaved2,2)
         
         return deinterleaved1,deinterleaved2
-    
     
     check_existence(read)
         
@@ -160,9 +166,10 @@ def check_single_reads(read):
     
     if is_interleaved(read,"^@.+/1","^@.+/2") or is_interleaved(read,"^@.+ 1:","^@.+ 2:"):
         read1,read2=deinterleave(read,fline)
-        if re.search(" ",fline) and args.reference:
-            whitespace2underscore(read1)
-            whitespace2underscore(read2)
+        if not args.reference:
+            if " " in get_first_line(read1) or " " in get_first_line(read2):
+                change_header_format(read1,1)
+                change_header_format(read2,2)
             
         return read1,read2
     
@@ -174,7 +181,7 @@ def check_single_reads(read):
             print("WARNING. Noticed whitespaces in headers of file: "+read+".")
             print("Trinity cannot handle this format.")
             print("Would you like to change the header format of your read files?")
-            print("Whitespaces (' ') in every header will be substituded with underscores ('_').")
+            print("Whitespaces (' ') in every header will be substituded with colons (':').")
             while True:
                 decision=input("Proceed? (y/n): ")
                 if decision.lower() in "yes" or decision.lower() in "no":
@@ -182,22 +189,22 @@ def check_single_reads(read):
                 else:
                     continue
             if decision.lower() in "yes":
-                print("Substituting whitespaces with underscores in headers of read file: "+read)
-                whitespace2underscore(read)
+                print("Substituting whitespaces with colons in headers of read file: "+read)
+                change_header_format(read,1)
 
             else: # decision = 'no'
                 print("No substitution will be done. Therefore Trinity cannot be executed and GUESSmyLT cannot continue.")
                 print("To continue with the analysis you have 3 options:")
                 print(" 1. Provide an assmebly/reference so that Trinity can be skipped.")
                 print(" 2. Manually substitute the whitespaces in the headers of "+read+".")
-                print(" 3. Re-execute GUESSmyLT and choose ('y') to substitute the whitespaces with underscores.")            
+                print(" 3. Re-execute GUESSmyLT and choose ('y') to substitute the whitespaces with colons.")            
                 print("Exiting GUESSmyLT.")
                 sys.exit()    
             
         return read
 
 
-def check_paired_reads(read1,read2):
+def check_paired_reads(read1,read2,args):
     check_existence(read1)
     check_existence(read2)
     
@@ -242,6 +249,8 @@ def check_paired_reads(read1,read2):
     
     if format=="Unknown":
         print("WARNING. Unknown read header format.")
+        print("First line in :"+read1+"\n\t"+fline1)
+        print("First line in :"+read2+"\n\t"+fline2)
         print("Assuming left read file: "+ read1+ " and right read file: "+read2)
         
         
@@ -253,7 +262,7 @@ def check_paired_reads(read1,read2):
         print("WARNING. Noticed whitespaces in headers of files: "+read1+", "+read2+".")
         print("Trinity cannot handle this format.")
         print("Would you like to change the header format of your read files?")
-        print("Whitespaces (' ') in every header will be substituded with underscores ('_').")
+        print("Whitespaces (' ') in every header will be substituded with colons (':').")
         while True:
             decision=input("Proceed? (y/n): ")
             if decision.lower() in "yes" or decision.lower() in "no":
@@ -262,17 +271,17 @@ def check_paired_reads(read1,read2):
                 continue
 
         if decision.lower() in "yes":
-            print("Substituting whitespaces with underscores in headers of read file: "+read1)
-            whitespace2underscore(read1)
-            print("Substituting whitespaces with underscores in headers of read file: "+read2)    
-            whitespace2underscore(read2)
+            print("Substituting whitespaces with colons in headers of read file: "+read1)
+            change_header_format(read1,1)
+            print("Substituting whitespaces with colons in headers of read file: "+read2)    
+            change_header_format(read2,2)
         
         else: # decision = 'no'
             print("No substitution will be done. Therefore Trinity cannot be executed and GUESSmyLT cannot continue.")
             print("To continue with the analysis you have 3 options:")
             print(" 1. Provide an assmebly/reference so that Trinity can be skipped.")
             print(" 2. Manually substitute the whitespaces in the headers of "+read1+" and "+read2+".")
-            print(" 3. Re-execute GUESSmyLT and choose ('y') to substitute the whitespaces with underscores.")            
+            print(" 3. Re-execute GUESSmyLT and choose ('y') to substitute the whitespaces with colons.")            
             print("Exiting GUESSmyLT.")
             sys.exit()    
  
@@ -359,11 +368,11 @@ def main():
     elif len(args.reads)==1:
         # Check that single reads are OK
         # or deinterleave paired end reads.
-        args.reads=check_single_reads(args.reads[0])
+        args.reads=check_single_reads(args.reads[0],args)
     # Check if two read files are provided.
     elif len(args.reads)==2:
         # Check that paired end reads are OK.
-        args.reads[0],args.reads[1]=check_paired_reads(args.reads[0],args.reads[1])
+        args.reads[0],args.reads[1]=check_paired_reads(args.reads[0],args.reads[1],args)
 
     # Too many readfiles were provided.
     else:
@@ -431,6 +440,7 @@ def main():
     # add memory and threads options
 
     # Change config file
+    #script_dir="."
     config_path = script_dir+"/config.json"
     with open(config_path,"r+") as configfile:
         data=json.load(configfile)
