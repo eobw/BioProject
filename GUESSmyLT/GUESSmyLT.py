@@ -1,3 +1,4 @@
+#!/usr/bin/env python3.6
 # Top script for pipeline.
 # Execute with: python execute.py --reads read1 (read2) --organism pro/euk
 # For more options type: python execute.py --help
@@ -13,27 +14,6 @@ from BCBio import GFF
 import pprint
 import gzip
 
-parser=argparse.ArgumentParser(description="Predict library type.")
-parser._action_groups.pop()
-required=parser.add_argument_group("required arguments")
-required.add_argument("--organism",type=str)
-optional=parser.add_argument_group("optional arguments")
-#required.add_argument("--reads",nargs="+",type=lambda x: is_valid_file(parser,x),help="Reads in (un)zipped .fastq format.")
-required.add_argument("--reads",nargs="+",type=str,help="Reads in (un)zipped .fastq format.")
-optional.add_argument("--reference",type=str,help="Reference genome/transcriptome in .fasta format.")
-optional.add_argument("--annotation",type=str,help="Annotation in .gff format")
-optional.add_argument("--mapped",type=str,help="") #Maybe add this?
-# maybe add group..
-#group=parser.add_mutually_exclusive_group(required=True)
-#group.add_argument("--annotation",type=str,help="Annotation in .gff format")
-#group.add_argument("--organism",type=str)
-optional.add_argument("--output",type=str,help="...")
-# These are not added to config.json yet.. 
-optional.add_argument("--threads", type=int, default=10,help="")
-optional.add_argument("--memory",type=str, default="8G",help="Maximum memory that can be used in GB. Ex. '10G'.")
-
-
-args=parser.parse_args()
 
 def open_zipped():
     pass
@@ -64,10 +44,10 @@ def get_first_line(read):
 def check_organism():
     if args.organism.lower() in "prokaryote":
         args.organism="prokaryote"
-    
+
     elif args.organism.lower() in "eukaryote":
         args.organism="eukaryote"
-    else: 
+    else:
         print("Error. Unrecognized organism --organism "+args.organism+". Only eukaryote/prokaryote are valid organism.")
         sys.exit()
 
@@ -75,7 +55,7 @@ def check_annotation(annotation_file):
     in_handle=open(annotation_file)
     for record in GFF.parse(in_handle, limit_info=dict(gff_type=["gene"])):
         if record:
-            return 
+            return
     # If no genes are found, gff file cannot be used in analysis.
     print("Error. No genes could be found in --annotation "+annotation_file+". Please, submit a .gff file containing genes or no .gff file.")
     sys.exit()
@@ -216,7 +196,7 @@ def check_single_reads(read):
             
         return read
 
-            
+
 def check_paired_reads(read1,read2):
     check_existence(read1)
     check_existence(read2)
@@ -298,14 +278,13 @@ def check_paired_reads(read1,read2):
  
  
     return read1,read2
-
         
 def check_mapped():
     print("Checker for mapper has not been developed yet.")
     print("Right now you cannot provide a map-file (.bam).")
     print("Therefore, skip the map-file and let GUESSmyLT do the mapping for you.")
     sys.exit()
-    
+
 def check_reference(ref):
     try:
         open(ref)
@@ -334,7 +313,7 @@ def check_reference(ref):
         print("Error. Reference file is not in fasta format. Missing '>' in beginning of fasta header.")
         sys.exit()
 
-def check_memory():
+def check_memory(args):
     if "G" == args.memory[-1] and "0" != args.memory[0] and args.memory[:-1].isdigit():
         return True
     else:
@@ -343,110 +322,138 @@ def check_memory():
 
 # ---Main From Here ---
 
-# ---Check reads---
-# At least one readfile must be provided. (single end or interleaved paired end reads)
-# At most two readiles can be provided. (paired end reads)
-#
-# Check if readfile is provided.
-if not args.reads:
-    print("Error. No read files provided.")
-    sys.exit()
-# Check if one read file is provided.
-elif len(args.reads)==1:
-    # Check that single reads are OK
-    # or deinterleave paired end reads. 
-    args.reads=check_single_reads(args.reads[0])
-# Check if two read files are provided.    
-elif len(args.reads)==2:
-    # Check that paired end reads are OK.
-    args.reads[0],args.reads[1]=check_paired_reads(args.reads[0],args.reads[1])    
-    
-# Too many readfiles were provided.    
-else:
-    print("Error. Too many read files.")
-    sys.exit()
+def main():
 
-# After reads have been checked, they are sorted so that read[1/left/forward] is first and read[2/right/reverse] is second.
-# Base readname on first read: 
-# Get readname, i.e: readname from path/to/reads/[readname].fq.gz
-readname=re.split(".fq|.fastq",os.path.basename(args.reads[0]))[0]
-
-    
-# ---Check threads---
-#if args.threads:
-#    check_threads()
-#else:
-#    # Default threads
-#    args.threads=6
+    parser=argparse.ArgumentParser(description="Predict library type.")
+    parser._action_groups.pop()
+    required=parser.add_argument_group("required arguments")
+    required.add_argument("--organism",type=str)
+    optional=parser.add_argument_group("optional arguments")
+    #required.add_argument("--reads",nargs="+",type=lambda x: is_valid_file(parser,x),help="Reads in (un)zipped .fastq format.")
+    required.add_argument("--reads",nargs="+",type=str,help="Reads in (un)zipped .fastq format.")
+    optional.add_argument("--reference",type=str,help="Reference genome/transcriptome in .fasta format.")
+    optional.add_argument("--annotation",type=str,help="Annotation in .gff format")
+    optional.add_argument("--mapped",type=str,help="") #Maybe add this?
+    # maybe add group..
+    #group=parser.add_mutually_exclusive_group(required=True)
+    #group.add_argument("--annotation",type=str,help="Annotation in .gff format")
+    #group.add_argument("--organism",type=str)
+    optional.add_argument("--output",type=str,help="...")
+    # These are not added to config.json yet..
+    optional.add_argument("--threads", type=int, default=10,help="")
+    optional.add_argument("--memory",type=str, default="8G",help="Maximum memory that can be used in GB. Ex. '10G'.")
 
 
-# ---Check mapping file---
-# If a mapping file (.bam/.sam) is provided, the reference used for mapping 
-# must also be provided.
-if args.mapped and not args.reference:
-    print("Error. If a mapping file is provided, the reference used for mapping must also be provided.")
-    sys.exit()
+    args=parser.parse_args()
 
- 
-if args.reference:
-    busco_reference_mode=check_reference(args.reference)
-else:
-    # Add Trinity assembly to config file.
-    args.reference="../data/intermediate/"+readname+".fasta"
+    script_dir = os.path.expanduser('~/BioProject/GUESSmyLT')
+    # ---Check reads---
+    # At least one readfile must be provided. (single end or interleaved paired end reads)
+    # At most two readiles can be provided. (paired end reads)
+    #
+    # Check if readfile is provided.
+    if not args.reads:
+        print("Error. No read files provided.")
+        sys.exit()
+    # Check if one read file is provided.
+    elif len(args.reads)==1:
+        # Check that single reads are OK
+        # or deinterleave paired end reads.
+        args.reads=check_single_reads(args.reads[0])
+    # Check if two read files are provided.
+    elif len(args.reads)==2:
+        # Check that paired end reads are OK.
+        args.reads[0],args.reads[1]=check_paired_reads(args.reads[0],args.reads[1])
 
+    # Too many readfiles were provided.
+    else:
+        print("Error. Too many read files.")
+        sys.exit()
 
-if args.mapped:
-    check_mapped()
-else:
-    #args.mapped="../data/intermediate/"+readname+"_sorted.bam"
-    args.mapped="../data/intermediate/"+readname+"_on_ref_"+re.split('/|\.',args.reference)[-2]+"_sorted.bam"
-
-busco_reference_mode="genome"
-# ---Check organism and/or annotation---
-# Organism or annotation file must be provided.
-# If none is provided, we cannot look for core genes.
-if args.organism:
-    check_organism()
-elif args.annotation:
-    check_annotation()
-else:
-    print("Error. Provide organism or annotation file.")
-    sys.exit()
-
-if args.annotation:
-    check_annotation(args.annotation)
-else:
-    args.annotation="../data/intermediate/run_"+re.split('/|\.',args.reference)[-2]
+    # After reads have been checked, they are sorted so that read[1/left/forward] is first and read[2/right/reverse] is second.
+    # Base readname on first read:
+    # Get readname, i.e: readname from path/to/reads/[readname].fq.gz
+    readname=re.split(".fq|.fastq",os.path.basename(args.reads[0]))[0]
 
 
-check_memory()
+    # ---Check threads---
+    #if args.threads:
+    #    check_threads()
+    #else:
+    #    # Default threads
+    #    args.threads=6
 
 
-# add checker for fasta files
+    # ---Check mapping file---
+    # If a mapping file (.bam/.sam) is provided, the reference used for mapping
+    # must also be provided.
+    if args.mapped and not args.reference:
+        print("Error. If a mapping file is provided, the reference used for mapping must also be provided.")
+        sys.exit()
 
-# add memory and threads options
 
-# Change config file
+    if args.reference:
+        busco_reference_mode=check_reference(args.reference)
+    else:
+        # Add Trinity assembly to config file.
+        args.reference="../data/intermediate/"+readname+".fasta"
 
-with open("config.json","r+") as configfile:
-    data=json.load(configfile)
-    data["trinity"]["reference"]=args.reference
-    data["input"]["reads"]=args.reads
-    data["input"]["readname"]=readname
-    data["busco"]["annotation"]=args.annotation
-    data["input"]["organism"]=args.organism
-    data["bowtie2"]["mapped-reads"]=args.mapped
-    data["busco"]["lineage"]=("../data/bacteria_odb9" if args.organism == "prokaryote" else "../data/eukaryota_odb9")
-    data["busco"]["mode"]=busco_reference_mode
-    data["input"]["threads"]=args.threads
-    data["input"]["memory"]=args.memory
-    configfile.seek(0)
-    json.dump(data,configfile,indent=4)
-    configfile.truncate()
-    
-# Add execution for snakefile...
-#os.system("snakemake ../data/intermediate/trinity --dag | dot -Tsvg > dag.svg -forceall")
-#os.system("snakemake ../data/output/result_4.txt")
-#os.system("snakemake -s bowtie2 "+args.mapped+" --forceall")
-#os.system("snakemake -s trinity --cores "+str(args.threads))
-#os.system("snakemake ../data/output/result_"+readname+".txt --cores "+str(args.threads))
+
+    if args.mapped:
+        check_mapped()
+    else:
+        #args.mapped="../data/intermediate/"+readname+"_sorted.bam"
+        args.mapped="../data/intermediate/"+readname+"_on_ref_"+re.split('/|\.',args.reference)[-2]+"_sorted.bam"
+
+    busco_reference_mode="genome"
+    # ---Check organism and/or annotation---
+    # Organism or annotation file must be provided.
+    # If none is provided, we cannot look for core genes.
+    #if args.organism:
+    #    check_organism()
+    #elif args.annotation:
+    #    check_annotation()
+    #else:
+    #    print("Error. Provide organism or annotation file.")
+    #    sys.exit()
+
+    if args.annotation:
+        check_annotation(args.annotation)
+    else:
+        args.annotation="../data/intermediate/run_"+re.split('/|\.',args.reference)[-2]
+
+
+    check_memory(args)
+
+
+    # add checker for fasta files
+
+    # add memory and threads options
+
+    # Change config file
+    config_path = script_dir+"/config.json"
+    with open(config_path,"r+") as configfile:
+        data=json.load(configfile)
+        data["trinity"]["reference"]=args.reference
+        data["input"]["reads"]=args.reads
+        data["input"]["readname"]=readname
+        data["busco"]["annotation"]=args.annotation
+        data["input"]["organism"]=args.organism
+        data["bowtie2"]["mapped-reads"]=args.mapped
+        data["busco"]["lineage"]=("../data/bacteria_odb9" if args.organism == "prokaryote" else "../data/eukaryota_odb9")
+        data["busco"]["mode"]=busco_reference_mode
+        data["input"]["threads"]=args.threads
+        data["input"]["memory"]=args.memory
+        configfile.seek(0)
+        json.dump(data,configfile,indent=4)
+        configfile.truncate()
+
+    # Add execution for snakefile...
+    #os.system("snakemake ../data/intermediate/trinity --dag | dot -Tsvg > dag.svg -forceall")
+    #os.system("snakemake ../data/output/result_4.txt")
+    #os.system("snakemake -s bowtie2 "+args.mapped+" --forceall")
+    #os.system("snakemake -s trinity --cores "+str(args.threads))
+    os.system("snakemake -s "+script_dir+"/Snakefile -d "+script_dir+" ../data/output/result_"+readname+".txt --cores "+str(args.threads))
+
+if __name__ == "__main__":
+    main()
