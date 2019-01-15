@@ -35,7 +35,31 @@ optional.add_argument("--memory",type=str, default="8G",help="Maximum memory tha
 
 args=parser.parse_args()
 
+def open_zipped():
+    pass
 # Maybe add exception class
+def check_existence(file):
+    try:
+        with open(file,"r") as f:
+            pass
+    except IOError:
+        print("Could not find file '"+file+"'. Make sure it exists.")
+        sys.exit()
+
+def check_readfile_extension(read):
+    if not any(x in read for x in [".fq",".fastq"]):
+        print("Error. Cannot find .fq or .fastq extension in read file --read "+read+".")
+        sys.exit()
+
+def get_first_line(read):
+    if read.endswith(".gz"):
+        with gzip.open(read,"rt") as f:
+            fline=f.readline()
+    else:
+        with open(read,"r") as f:
+            fline=f.readline()
+    return fline
+            
 
 def check_organism():
     if args.organism.lower() in "prokaryote":
@@ -56,50 +80,150 @@ def check_annotation(annotation_file):
     print("Error. No genes could be found in --annotation "+annotation_file+". Please, submit a .gff file containing genes or no .gff file.")
     sys.exit()
 
-def check_single_reads(read):
-    try:
-        reader=open(read,"r")
-        reader.close()
-    except IOError:
-        print("Could not find readfile '"+read+"'. Make sure it exists.")
-        sys.exit()
-    if not any(x in read for x in [".fq",".fastq"]):
-        print("Error. Cannot find .fq or fastq extension in read file --read "+read+".")
-        sys.exit()
-    checked_reads=subprocess.check_output(
-    "./check_single_read_files.sh "+
-    read,
-    shell=True,
-    encoding="utf8"
-    )
-    if len(checked_reads.split("\n"))==1:
-        # Do nothing, data file is single end.
-        return [read]
+def whitespace2underscore(read):
+    if read.endswith(".gz"):
+        os.system("""
+        f="""+read+"""
+        cp "$f" "$f~" &&
+        gzip -cd "$f~" | sed '/^@/s/ /_/g' | gzip > "$f"
+        rm "$f~"
+        """)
     else:
-        # Interleaved paired end reads. 
-        # They have been deinterleaved with check_single_read_files.sh
-        # Store new, deinterleaved readfiles in args.reads:
-        return checked_reads.split("\n")[1:2]
+        os.system("sed -i -e '/^@/s/ /_/g' "+read)
+
+def check_single_reads(read):
+            
+    def is_interleaved(read,pattern1,pattern2):
+        
+        if read.endswith(".gz"):
+            f=gzip.open(read,"rt")
+        else:
+            f=open(read,"r")    
+        
+        num_read1=0
+        num_read2=0
+        counter=0
+        headers=[]
+        
+        for line in f:
+            counter+=1
+            if re.match(pattern1,line):
+                num_read1+=1
+            elif re.match(pattern2,line):
+                num_read2+=1
+    
+            if line.startswith("@"):
+                ID=line.split(" ")[0]
+                if ID in headers:
+                    return True
+                else:
+                    headers.append(ID) 
+                    
+            if counter==10000:
+                break        
+        f.close()
+        
+        if num_read1>0 and num_read2>0:
+            return True
+        else:
+            return False
+    
+    
+    def deinterleave(read,line):
+        print("Found interleaved reads in read file: "+read+".")
+        print("Deinterleaving data.")
+        readname=re.split(".fq|.fastq",os.path.basename(read))[0]
+        deinterleaved="../data/input/deinterleaved."+readname
+        deinterleaved1=deinterleaved+".r1.fastq.gz"
+        deinterleaved2=deinterleaved+".r2.fastq.gz"
+        
+        zip_command="cat"
+        if read.endswith(".gz"):
+            zip_command="zcat"
+            
+        if re.match("^@.+ 1:", line) and re.match("^@.+ 2:",line):
+            print("Extracting left reads of '"+read+"' to '"+deinterleaved1+"'.")
+            os.system(zip_command+" "+read+" | awk '/^@.*[ ]1:/{c=4} c&&c--' | gzip --stdout > "+deinterleaved+".r1.fastq.gz")
+            print("Extracting right reads of '"+read+"' to '"+deinterleaved1+"'.")
+            os.system(zip_command+" "+read+" | awk '/^@.*[ ]2:/{c=4} c&&c--' | gzip --stdout > "+deinterleaved+".r2.fastq.gz")
+        elif re.match("^@.+/1",line) and re.match("^@.+/2",line):
+            print("Extracting left reads of '"+read+"' to '"+deinterleaved1+"'.")
+            os.system(zip_command+" "+read+" | awk '/^@.*[/]1/{c=4} c&&c--' | gzip --stdout > "+deinterleaved+".r1.fastq.gz")
+            print("Extracting right reads of '"+read+"' to '"+deinterleaved2+"'.")
+            os.system(zip_command+" "+read+" | awk '/^@.*[/]2/{c=4} c&&c--' | gzip --stdout > "+deinterleaved+".r2.fastq.gz")
+        else:
+            # Assuming that interleaved reads in a file are alternating.
+            # This extraction can be written with a one line command:
+            #   os.system(paste - - - - - - - - <"""+read+""" | tee >(cut -f 1-4 | tr "\t" "\n" > """+deinterleaved1+""") | cut -f 5-8 | tr "\t" "\n" > """+deinterleaved2)
+            # The command works if you execute it from the command line, but not using os.system.
+            # Right now, two lines are used, and this part can be optimized.
+            print("Extracting left reads of '"+read+"' to '"+deinterleaved1+"'.")
+            #os.system("""paste - - - - - - - - < """+read+""" | cut -f 1-4 | tr "\t" "\n" | gzip > """+deinterleaved1)
+            os.system(zip_command+""" """+read+""" | paste - - - - - - - - | cut -f 1-4 | tr "\t" "\n" | gzip > """+deinterleaved1)
+            print("Extracting right reads of '"+read+"' to '"+deinterleaved2+"'.")
+            os.system(zip_command+""" """+read+""" | paste - - - - - - - - | cut -f 5-8 | tr "\t" "\n" | gzip > """+deinterleaved2)
+            #os.system("""paste - - - - - - - - < """+read+""" | cut -f 5-8 | tr "\t" "\n" | gzip > """+deinterleaved2)
+        
+        if " " in get_first_line(read):
+            print("Detected whitespaces in read file headers.")
+            print("Substituting whitespaces in deinterleaved read file: "+deinterleaved1)
+            whitespace2underscore(deinterleaved1)
+            print("Substituting whitespaces in deinterleaved read file: "+deinterleaved1)
+            whitespace2underscore(deinterleaved2)    
+        
+        return deinterleaved1,deinterleaved2
+    
+    
+    check_existence(read)
+        
+    fline=get_first_line(read)
+    
+    if is_interleaved(read,"^@.+/1","^@.+/2") or is_interleaved(read,"^@.+ 1:","^@.+ 2:"):
+        read1,read2=deinterleave(read,fline)
+        if re.search(" ",fline) and args.reference:
+            whitespace2underscore(read1)
+            whitespace2underscore(read2)
+            
+        return read1,read2
+    
+    else:
+        if re.search(" ",fline) and not args.reference:
+            # Trinity cannot handle whitespaces in fastq-headers.
+            # Therefore, if Trinity is to be executed (when no reference is given),
+            # we need to replace the whitespaces with e.g. "_"
+            print("WARNING. Noticed whitespaces in headers of file: "+read+".")
+            print("Trinity cannot handle this format.")
+            print("Would you like to change the header format of your read files?")
+            print("Whitespaces (' ') in every header will be substituded with underscores ('_').")
+            while True:
+                decision=input("Proceed? (y/n): ")
+                if decision.lower() in "yes" or decision.lower() in "no":
+                    break
+                else:
+                    continue
+            if decision.lower() in "yes":
+                print("Substituting whitespaces with underscores in headers of read file: "+read)
+                whitespace2underscore(read)
+
+            else: # decision = 'no'
+                print("No substitution will be done. Therefore Trinity cannot be executed and GUESSmyLT cannot continue.")
+                print("To continue with the analysis you have 3 options:")
+                print(" 1. Provide an assmebly/reference so that Trinity can be skipped.")
+                print(" 2. Manually substitute the whitespaces in the headers of "+read+".")
+                print(" 3. Re-execute GUESSmyLT and choose ('y') to substitute the whitespaces with underscores.")            
+                print("Exiting GUESSmyLT.")
+                sys.exit()    
+            
+        return read
 
             
 def check_paired_reads(read1,read2):
-    try:
-        reader=open(read1,"r")
-        reader.close()
-    except IOError:
-        print("Could not find readfile '"+read1+"'. Make sure it exists.")
-        sys.exit()
+    check_existence(read1)
+    check_existence(read2)
     
-    try:
-        reader=open(read2,"r")
-        reader.close()
-    except IOError:
-        print("Could not find readfile '"+read2+"'. Make sure it exists.")
-        sys.exit()
-        
-    if not any(x in read1 for x in [".fq",".fastq"]) and not any(x in read2 for x in [".fq",".fastq"]):
-        print("Error. Cannot find .fq or .fastq extension in read files --read "+read1+" "+read2+".")
-        sys.exit()
+    check_readfile_extension(read1)
+    check_readfile_extension(read2)
+ 
     
     if read1.endswith(".gz"):
         with gzip.open(read1,"rt") as f:
@@ -136,54 +260,46 @@ def check_paired_reads(read1,read2):
         
     print("Based on read headers we are working with format: "+format)
     
+    if format=="Unknown":
+        print("WARNING. Unknown read header format.")
+        print("Assuming left read file: "+ read1+ " and right read file: "+read2)
+        
+        
+    
     if re.search(" ",fline1) and re.search(" ",fline2) and not args.reference:
         # Trinity cannot handle whitespaces in fastq-headers.
         # Therefore, if Trinity is to be executed (when no reference is given),
         # we need to replace the whitespaces with e.g. "_"
         print("WARNING. Noticed whitespaces in headers of files: "+read1+", "+read2+".")
         print("Trinity cannot handle this format.")
-        print("\n\nWould you like to change the header format of your read files?")
+        print("Would you like to change the header format of your read files?")
         print("Whitespaces (' ') in every header will be substituded with underscores ('_').")
-        print("Proceed? (y/n)")
-        # if command.small in "no":
-            #print("Since you choose no, Trinity cannot be utilized and the pipeline cannot proceed.")
-            #print("Either change the read headers manually so that no whitespaces appears or \
-            # provide a reference so that assembly step (Trinity) can be skipped.")
-            #sys.exit()
-        #else:
-            #pass
+        while True:
+            decision=input("Proceed? (y/n): ")
+            if decision.lower() in "yes" or decision.lower() in "no":
+                break
+            else:
+                continue
+
+        if decision.lower() in "yes":
+            print("Substituting whitespaces with underscores in headers of read file: "+read1)
+            whitespace2underscore(read1)
+            print("Substituting whitespaces with underscores in headers of read file: "+read2)    
+            whitespace2underscore(read2)
         
-        
-        #os.system("zcat "+read1+" | sed -i -e '/^@/s/ /_/g' "+read1)
-        os.system("""
-        f="""+read1+"""
-        cp "$f" "$f~" &&
-        gzip -cd "$f~" | sed '/^@/s/ /_/g' | gzip > "$f"
-        """)
-        
-        os.system("""
-        f="""+read2+"""
-        cp "$f" "$f~" &&
-        gzip -cd "$f~" | sed '/^@/s/ /_/g' | gzip > "$f"
-        """)
-        
-        
+        else: # decision = 'no'
+            print("No substitution will be done. Therefore Trinity cannot be executed and GUESSmyLT cannot continue.")
+            print("To continue with the analysis you have 3 options:")
+            print(" 1. Provide an assmebly/reference so that Trinity can be skipped.")
+            print(" 2. Manually substitute the whitespaces in the headers of "+read1+" and "+read2+".")
+            print(" 3. Re-execute GUESSmyLT and choose ('y') to substitute the whitespaces with underscores.")            
+            print("Exiting GUESSmyLT.")
+            sys.exit()    
+ 
  
     return read1,read2
-    ordered_reads=subprocess.check_output(
-    "./check_paired_read_files.sh "+
-    read1+" "+
-    read2,
-    shell=True,
-    encoding="utf8")
-    print(ordered_reads)
-    
-    if len(ordered_reads.split("\n"))==2:
-        print("Error. Unrecognized header format for paired end reads.")
-        sys.exit()
-    else:
-        return ordered_reads.split("\n")[1:3]
 
+        
 def check_mapped():
     print("Checker for mapper has not been developed yet.")
     print("Right now you cannot provide a map-file (.bam).")
@@ -289,13 +405,13 @@ busco_reference_mode="genome"
 # ---Check organism and/or annotation---
 # Organism or annotation file must be provided.
 # If none is provided, we cannot look for core genes.
-#if args.organism:
-#    check_organism()
-#elif args.annotation:
-#    check_annotation()
-#else:
-#    print("Error. Provide organism or annotation file.")
-#    sys.exit()
+if args.organism:
+    check_organism()
+elif args.annotation:
+    check_annotation()
+else:
+    print("Error. Provide organism or annotation file.")
+    sys.exit()
 
 if args.annotation:
     check_annotation(args.annotation)
@@ -333,4 +449,4 @@ with open("config.json","r+") as configfile:
 #os.system("snakemake ../data/output/result_4.txt")
 #os.system("snakemake -s bowtie2 "+args.mapped+" --forceall")
 #os.system("snakemake -s trinity --cores "+str(args.threads))
-os.system("snakemake ../data/output/result_"+readname+".txt --cores "+str(args.threads))
+#os.system("snakemake ../data/output/result_"+readname+".txt --cores "+str(args.threads))
