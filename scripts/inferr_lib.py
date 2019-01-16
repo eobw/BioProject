@@ -1,6 +1,7 @@
 """
-Script for inferring library type of mapped reads
-$ inferr_lib.py [run_name] [single OR paired]
+Script for inferring library type of mapped reads.
+Uses augustus-predicted genes via BUSCO and bowtie2-mapped reads.
+$ python inferr_lib.py {reference} {mapped_reads} {readname} {readpath} {PE_SE} {single OR paired}
 """
 
 import sys
@@ -18,7 +19,7 @@ import pysam
 def extract_genes(run_name):
     '''
     Function for extracting genes corresponding to BUSCO hits (genes).
-    Returns a SeqRecord object with one feature per BUSCO hit.
+    Returns a SeqRecord object with one feature per gene.
     '''
 
     file_tsv = open("../data/intermediate/run_"+run_name+"/full_table_"+run_name+".tsv", 'r')
@@ -28,16 +29,17 @@ def extract_genes(run_name):
     for line in file_tsv.readlines():
         hit = (re.search(r'(\S*)\s(Complete)\s(\S*)\s(\S*)\s(\S*)\s\S*', line))
         if hit:
-            busco_record.features.append(SeqFeature(FeatureLocation(int(hit.group(4)), int(hit.group(5))), id=hit.group(1), type='gene', qualifiers={'contig': hit.group(3)}))
+            busco_record.features.append(SeqFeature(FeatureLocation(int(hit.group(4)),\ int(hit.group(5))), id=hit.group(1), type='gene', qualifiers={'contig': hit.group(3)}))
 
     file_tsv.close()
 
-    # Match the BUSCOs to augustus predicted genes in gff file
+    # Match the BUSCOs to augustus predicted genes in gff files
     gff_records = []
     correct_genes = SeqRecord(seq='', id='correct_genes')
     limit_infos = dict(
             gff_type = ["gene"]) # Only want genes
 
+    # Extract genes from .gffs
     for busco in busco_record.features:
         filename = busco.id # gff filenames are [busco_id].gff
         try:
@@ -52,11 +54,10 @@ def extract_genes(run_name):
     for rec in gff_records:
         for hit in busco_record.features:
             for feature in rec.features:
-                if hit.location.start-1 == feature.location.start and hit.location.end == feature.location.end: # For some reason start has 1 nt diff...
+                if hit.location.start-1 == feature.location.start and hit.location.end == feature.location.end: # For some reason start has 1 nt diff
                     feature.id = rec.id
                     correct_genes.features.append(feature)
                     break
-
 
     print("Number of genes extracted: %d\n" % (len(correct_genes.features)))
     return correct_genes
@@ -65,7 +66,7 @@ def infer_paired_region(genes):
     '''
     Function for inferring paired library-type by looking at a regions corresponding to genes
     '''
-        # Counters for the different lib-types
+    # Counters for the different lib-types
     libs = {
         'fr_first': 0,
         'fr_second': 0,
@@ -76,6 +77,7 @@ def infer_paired_region(genes):
         'undecided': 0
     }
 
+    # For every gene extract reads that map to gene region and find lib-type
     for gene in genes.features:
         contig = gene.id
         start = int(gene.location.start)
@@ -83,13 +85,10 @@ def infer_paired_region(genes):
         strand = gene.strand
         reads = []
         # Get reads mapped to a specific contig and in a sequence range
-        # TODO: Look into optimizing this step, only take a subset (1000ish) reads?
-        # samfile.mate is not made for high throughput
+        # TODO: Look into optimizing this step, only take a subset (1000ish) reads? samfile.mate is not made for high throughput
         for read in samfile.fetch(contig, start, stop):
             if not read.mate_is_unmapped and read.is_read1:
                 reads.append([read, samfile.mate(read)])
-
-
 
         # Check lib-type of reads
         for read in reads:
@@ -127,13 +126,12 @@ def infer_paired_region(genes):
                         lib = 'undecided'
                 libs[lib] += 1
             except: libs['undecided'] +=1 #Some reads missing start or end-values
-
     return libs
-
 
 def infer_single_region(genes):
     """
     Function for inferring library type of single-ended library types
+    r-library prediction not validated
     """
 
     libs = {
@@ -144,10 +142,12 @@ def infer_single_region(genes):
         'undecided': 0
     }
 
+    # Read original read IDs and sequences from the fastq files
     og_reads = {}
     for record in SeqIO.parse(run_path, "fastq"):
         og_reads[record.id]= str(record.seq)
 
+    # For every gene extract reads that map to gene region and find lib-type
     for gene in genes.features:
         contig = gene.id
         start = int(gene.location.start)
@@ -155,7 +155,6 @@ def infer_single_region(genes):
         strand = gene.strand
         reads = []
         # Get reads mapped to a specific contig and in a sequence range
-        # Slow, only take 1000 reads?
         for read in samfile.fetch(contig, start, stop):
             if not read.is_unmapped:
                 reads.append(read)
@@ -188,7 +187,6 @@ def infer_single_region(genes):
                     else:
                         lib = 'undecided'
                 else:
-                    print(read)
                     lib = 'undecided'
                 libs[lib] += 1
             except: libs['undecided'] +=1 # Some reads missing start or end-values
@@ -223,9 +221,6 @@ run_name = sys.argv[3]
 run_path = sys.argv[4]
 state = sys.argv[5]
 
-
-
-
 samfile = pysam.AlignmentFile(mapped_reads, "rb")
 
 print("Extracting genes...")
@@ -237,7 +232,6 @@ if state == 'single':
 elif state == 'paired':
     print("Running paired end inferring")
     result = infer_paired_region(genes)
-
 
 print("Prediction finished:\n")
 write_result(result)
