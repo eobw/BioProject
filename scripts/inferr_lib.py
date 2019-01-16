@@ -19,11 +19,7 @@ import pysam
 def extract_genes(run_name):
     '''
     Function for extracting genes corresponding to BUSCO hits (genes).
-<<<<<<< HEAD
     Returns a SeqRecord object with one feature per gene.
-=======
-    Returns a SeqRecord object with one feature per BUSCO hit.
->>>>>>> Single end finalized
     '''
 
     file_tsv = open("../data/intermediate/run_"+run_name+"/full_table_"+run_name+".tsv", 'r')
