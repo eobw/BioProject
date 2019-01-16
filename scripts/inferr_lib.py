@@ -17,7 +17,7 @@ import pysam
 
 def extract_genes(run_name):
     '''
-    Function for extracting genes corresponding to BUSCO hits.
+    Function for extracting genes corresponding to BUSCO hits (genes).
     Returns a SeqRecord object with one feature per BUSCO hit.
     '''
 
@@ -26,7 +26,7 @@ def extract_genes(run_name):
     # Extract BUSCO IDs, start and end from table of hits into SeqRecord object, each BUSCO as a SeqFeature
     busco_record = SeqRecord(seq='', id='hits')
     for line in file_tsv.readlines():
-        hit = (re.search(r'(\S*)\s(Complete|Duplicated)\s(\S*)\s(\S*)\s(\S*)\s\S*', line))
+        hit = (re.search(r'(\S*)\s(Complete)\s(\S*)\s(\S*)\s(\S*)\s\S*', line))
         if hit:
             busco_record.features.append(SeqFeature(FeatureLocation(int(hit.group(4)), int(hit.group(5))), id=hit.group(1), type='gene', qualifiers={'contig': hit.group(3)}))
 
@@ -136,18 +136,13 @@ def infer_paired_region(genes):
 def infer_single_region(genes):
     """
     Function for inferring library type of single-ended library types
-    Work in progress
     """
 
     libs = {
-        'f_first1': 0,
-        'f_second1': 0,
-        'r_first1': 0,
-        'r_second1': 0,
-        'f_first2': 0,
-        'f_second2': 0,
-        'r_first2': 0,
-        'r_second2': 0,
+        'f_first': 0,
+        'f_second': 0,
+        'r_first': 0,
+        'r_second': 0,
         'undecided': 0
     }
 
@@ -171,29 +166,27 @@ def infer_single_region(genes):
         for read in reads:
             try:
                 flag = SequenceMatcher(None, og_reads[read.query_name], read.query_sequence).ratio() >= 0.8
-                print(flag)
-
                 lib = ''
                 if strand == 1:
                     if flag and not read.is_reverse:
-                        lib += 'f_second1'
+                        lib += 'f_second'
                     elif not flag and read.is_reverse:
-                        lib += 'f_first1'
+                        lib += 'f_first'
                     elif flag and read.is_reverse:
-                        lib += 'r_second1'
+                        lib += 'r_second'
                     elif not flag and not read.is_reverse:
-                        lib += 'r_first1'
+                        lib += 'r_first'
                     else:
                         lib = 'undecided'
                 elif strand == -1:
                     if not flag and read.is_reverse:
-                        lib += 'f_second2'
+                        lib += 'f_second'
                     elif flag and  not read.is_reverse:
-                        lib += 'f_first2'
+                        lib += 'f_first'
                     elif flag and read.is_reverse:
-                        lib += 'r_first2'
+                        lib += 'r_first'
                     elif not flag and  not read.is_reverse:
-                        lib += 'r_second2'
+                        lib += 'r_second'
                     else:
                         lib = 'undecided'
                 else:
@@ -204,6 +197,9 @@ def infer_single_region(genes):
     return libs
 
 def write_result(lib_dict):
+    """
+    Function for calculating precentages and writing results of inferring to resultfile.
+    """
     output = open('../data/output/result_'+run_name+'.txt', 'w+')
     output.write("Results of library inferring "+run_name+": \nLibrary type \t Reads \t Percent \n")
     print("Results of library inferring: \nLibrary type \t Reads \t Percent \n")
@@ -211,11 +207,15 @@ def write_result(lib_dict):
     total_reads = 0
     for i in lib_dict:
         total_reads += lib_dict[i]
-
-    for i in lib_dict:
-        percent = '{:.1%}'.format(lib_dict[i]/total_reads)
-        output.write("%s \t %d \t %s\n" % (i, lib_dict[i], percent))
-        print("%s \t %d \t %s\n" % (i, lib_dict[i], percent))
+    if total_reads > 0:
+        for i in lib_dict:
+            percent = '{:.1%}'.format(lib_dict[i]/total_reads)
+            output.write("%s \t %d \t %s\n" % (i, lib_dict[i], percent))
+            print("%s \t %d \t %s\n" % (i, lib_dict[i], percent))
+    else:
+        for i in lib_dict:
+            output.write("%s \t %d \t %s\n" % (i, 0, 0))
+            print("%s \t %d \t %s\n" % (i, 0, 0))
 
 # ---------- RUNNING ----------
 
