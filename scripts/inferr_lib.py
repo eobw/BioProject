@@ -39,16 +39,14 @@ def extract_genes(run_name):
             gff_type = ["gene"]) # Only want genes
 
     for busco in busco_record.features:
-        filename = busco.id # gff filenames are [busco_id].out.[1-999]
-        i = 1
-        while True:
-            try:
-                file_gff = open("../data/intermediate/run_"+run_name+"/augustus_output/predicted_genes/"+filename+".out."+str(i))
-                for record in GFF.parse(file_gff, limit_info=limit_infos):
-                    gff_records.append(record)
-                i += 1
-            except: # Finished reading all files for that BUSCO
-                break
+        filename = busco.id # gff filenames are [busco_id].gff
+        try:
+            file_gff = open("../data/intermediate/run_"+run_name+"/augustus_output/gffs/"+filename+".gff")
+            for record in GFF.parse(file_gff, limit_info=limit_infos):
+                gff_records.append(record)
+            file_gff.close()
+        except:
+            pass
 
     # Find augustus predicted genes from the gff that match BUSCOs
     for rec in gff_records:
@@ -59,7 +57,7 @@ def extract_genes(run_name):
                     correct_genes.features.append(feature)
                     break
 
-    file_gff.close()
+
     print("Number of genes extracted: %d\n" % (len(correct_genes.features)))
     return correct_genes
 
