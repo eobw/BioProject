@@ -29,7 +29,7 @@ def extract_genes(run_name):
     for line in file_tsv.readlines():
         hit = (re.search(r'(\S*)\s(Complete)\s(\S*)\s(\S*)\s(\S*)\s\S*', line))
         if hit:
-            busco_record.features.append(SeqFeature(FeatureLocation(int(hit.group(4)), int(hit.group(5))), id=hit.group(1), type='gene', qualifiers={'contig': hit.group(3)}))
+            busco_record.features.append(SeqFeature(FeatureLocation(int(hit.group(4)),\ int(hit.group(5))), id=hit.group(1), type='gene', qualifiers={'contig': hit.group(3)}))
 
     file_tsv.close()
 
