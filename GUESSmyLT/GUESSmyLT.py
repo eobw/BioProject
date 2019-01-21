@@ -1,13 +1,14 @@
 #!/usr/bin/env python3.6
-# Top script for pipeline.
-# Execute with: python execute.py --reads read1 (read2) --organism pro/euk
-# For more options type: python execute.py --help
+# Top script for pipeline of GUESSmyLT.
+# The script handles user arguments, validates inputs, modifies the read files 
+# (if needed) and executes the pipeline by calling Snakemake.
+# 
+# Example runs: 
+#   With minimum inputs: python GUESSmyLT.py --reads read1 read2 --organism euk
+#   With some optional inputs: python GUESSmyLT.py --reads read1 read2 --organism euk --threads 10 --memory 5G --reference reference.fasta
+# 
+# For more options type: python GUESSmyLT.py --help
 
-
-
-
-
-# ADD CHECKER FOR IF FILES EXIST!!!!!!!!!!!!!!!!!!!!!!!
 
 import argparse, sys, json, os, re, subprocess
 from BCBio import GFF
@@ -28,6 +29,7 @@ def check_existence(file):
         print("Could not find file '"+file+"'. Make sure it exists.")
         sys.exit()
 
+
 def check_readfile_extension(read):
     """
     Checks that a read file has either '.fq' or '.fastq' as file extension.
@@ -35,6 +37,7 @@ def check_readfile_extension(read):
     if not any(x in read for x in [".fq",".fastq"]):
         print("Error. Cannot find .fq or .fastq extension in read file --read "+read+".")
         sys.exit()
+
 
 def get_first_line(read):
     """
@@ -103,6 +106,45 @@ def change_header_format(read,num):
         
     os.system("mv "+tmp+" "+fixed_header)
     return fixed_header    
+
+def check_subsample(num):
+    """
+    Checks that number of reads used for subsampling is even.
+    Otherwise, it will not work if we work with paired end data.
+    """
+    if num%2==0:
+        # Number is even --> Valid
+        pass
+    else:
+        # Number is odd --> Not valid
+        print("Error. Number of reads used for subsampling (--subsample) must be even.")
+        sys.exit()
+
+        
+def subsample(read,num):
+    """
+    Selects the num first reads of a fastq files (subsamples) and copies them 
+    to a subsampled file.
+    The subsampled file is used throughout the analysis instead of original file. 
+    This makes the run faster and also protects the original read file from being 
+    modified.  
+    """
+    readname=re.split(".fq|.fastq",os.path.basename(read))[0]
+    subsampled="../data/intermediate/"+readname+".sub."+str(num)+".fastq.gz"
+    if os.path.exists(subsampled):
+        print("Already found file with "+str(num)+" subsampled reads.")
+        print("Subsampled file "+subsampled+" will be used for analysis.")
+    else:
+        print("Subsampling "+str(num)+" reads of "+read+" to new read file: "+subsampled)
+        # Multiply with 4 because a read consists of 4 lines in a fastq file.
+        num=str(4*num)
+        zip_command="cat"
+        if read.endswith(".gz"):
+            zip_command="zcat"
+            
+            # gzip gives broken pipe for compressed files, but works anyway.
+        os.system(zip_command+" "+read+" | head -"+num+" | gzip > "+subsampled)
+    return subsampled
 
 
 def check_single_reads(read,args):
@@ -207,6 +249,8 @@ def check_single_reads(read,args):
     # Check that read files exists and can be read
     check_existence(read)
     
+    # subsample reads from read file and continue analysis on new, subsampled file.
+    read=subsample(read,args.subsample)
     # Get first first line of read file
     fline=get_first_line(read)
     
@@ -248,6 +292,12 @@ def check_paired_reads(read1,read2,args):
     
     check_readfile_extension(read1)
     check_readfile_extension(read2)
+    
+    # Subsample reads from read file and continue analysis on new, subsampled files.
+    # Need to divide with 2 since subsample takes the total amount of reads that will be used.
+    args.subsample=int(args.subsample/2)
+    read1=subsample(read1,args.subsample)
+    read2=subsample(read2,args.subsample)
     
     fline1=get_first_line(read1)
     fline2=get_first_line(read2)
@@ -291,6 +341,7 @@ def check_paired_reads(read1,read2,args):
         read2=change_header_format(read2,2)
         
     return read1,read2
+
         
 def check_mapped():
     # Not developed yet. Added in to do list.
@@ -298,6 +349,7 @@ def check_mapped():
     print("Right now you cannot provide a map-file (.bam).")
     print("Therefore, skip the map-file and let GUESSmyLT do the mapping for you.")
     sys.exit()
+
 
 def check_reference(ref):
     """
@@ -337,6 +389,7 @@ def check_reference(ref):
         print("Error. Reference file is not in fasta format. Missing '>' in beginning of fasta header.")
         sys.exit()
 
+
 def check_memory(args):
     """
     Checks that the maximum memory used are written correctly in gigabytes, e.g. 8G.
@@ -347,6 +400,7 @@ def check_memory(args):
         print("Invalid --memory argument: '"+args.memory+"'. Memory should be given in GIGABYTES. For example --memory '4G'")
         sys.exit()
 
+    
 # ---Main from here ---
 
 def main():
@@ -364,10 +418,11 @@ def main():
     required.add_argument("--organism",type=str, help="What organism are you dealing with? prokaryote or eukaryote.")
     optional=parser.add_argument_group("OPTIONAL ARGUMENTS")
     required.add_argument("--reads",nargs="+",type=str,help="One or two read files in .fastq format. Files can be compressed or uncrompressed. Handles interleaved read files and any known .fastq header format. ")
+    optional.add_argument("--subsample",type=int,default=100000,help="Number of subsampled reads that will be used for analysis. Must be an even number. Default value is 100,000 reads.")
     optional.add_argument("--reference",type=str,help="Reference file in .fasta format. Reference can be either transcriptome or genome.")
     optional.add_argument("--annotation",type=str,help="Annotation file in .gff format. Needs to contain genes.")
     optional.add_argument("--mapped",type=str,help="Mapped file in sorted .bam format. Reference that reads have been mapped to has to be provided. Checker for this has not been developed yet. Therefore, do not provide a mapping file.") #Maybe add this?
-    optional.add_argument("--output",type=str,help="The name of your result file.")
+    optional.add_argument("--output",type=str,help="The name of your result file. This has not been developed yet. Right know, only a standard name based on your read files is returned as output.")
     optional.add_argument("--threads", type=int, default=10,help="The number of threads that can be used by GUESSmyLT. Needs to be an integer. Defualt value is 10.")
     optional.add_argument("--memory",type=str, default="8G",help="Maximum memory that can be used by GUESSmyLT in GB. E.g. '10G'. Default value is 8G.")
     args=parser.parse_args()
@@ -375,13 +430,16 @@ def main():
     # The path to tool directory. Helps with the relative paths.
     script_dir = os.path.expanduser('~/BioProject/GUESSmyLT')
     
+    # ---Check subsampling---
+    check_subsample(args.subsample)
+    
     # ---Check reads---
     # At least one readfile must be provided. (single end or interleaved paired end reads)
     # At most two readiles can be provided. (paired end reads)
     #
     # Check if readfile is provided.
     if not args.reads:
-        print("Error. No read files provided.")
+        print("Error. No read files provided. At least one read file should be provided.")
         sys.exit()
     # Check if one read file is provided.
     elif len(args.reads)==1:
@@ -404,23 +462,18 @@ def main():
     # Readname is used to make each run unique.
     readname=re.split(".fq|.fastq",os.path.basename(args.reads[0]))[0]
 
-
-    # ---Check threads---
-    #if args.threads:
-    #    check_threads()
-    #else:
-    #    # Default threads
-    #    args.threads=6
-
-
     # ---Check mapping file---
     # If a mapping file (.bam/.sam) is provided, the reference used for mapping
     # must also be provided.
     if args.mapped and not args.reference:
         print("Error. If a mapping file is provided, the reference used for mapping must also be provided.")
         sys.exit()
-
-
+    
+    # Tells busco what type of reference: genome or transcriptome.
+    # Right now we always tell busco that it's working with a genome, 
+    # because it gives less result files if it is a transcriptome.
+    # This could be optimized.
+    busco_reference_mode="genome"
     if args.reference:
         busco_reference_mode=check_reference(args.reference)
     else:
@@ -431,21 +484,9 @@ def main():
     if args.mapped:
         check_mapped()
     else:
-        #args.mapped="../data/intermediate/"+readname+"_sorted.bam"
         args.mapped="../data/intermediate/"+readname+"_on_ref_"+re.split('/|\.',args.reference)[-2]+"_sorted.bam"
 
-    busco_reference_mode="genome"
-    # ---Check organism and/or annotation---
-    # Organism or annotation file must be provided.
-    # If none is provided, we cannot look for core genes.
-    #if args.organism:
-    #    check_organism()
-    #elif args.annotation:
-    #    check_annotation()
-    #else:
-    #    print("Error. Provide organism or annotation file.")
-    #    sys.exit()
-
+    
     if args.annotation:
         check_annotation(args.annotation)
     else:
@@ -455,11 +496,7 @@ def main():
     check_memory(args)
 
 
-    # add checker for fasta files
-
-    # add memory and threads options
-
-    # Change config file
+    # Update config file
     script_dir="."
     config_path = script_dir+"/config.json"
     with open(config_path,"r+") as configfile:
@@ -474,15 +511,12 @@ def main():
         data["busco"]["mode"]=busco_reference_mode
         data["input"]["threads"]=args.threads
         data["input"]["memory"]=args.memory
+        data["output"]=args.output
         configfile.seek(0)
         json.dump(data,configfile,indent=4)
         configfile.truncate()
 
-    # Add execution for snakefile...
-    #os.system("snakemake ../data/intermediate/trinity --dag | dot -Tsvg > dag.svg -forceall")
-    #os.system("snakemake ../data/output/result_4.txt")
-    #os.system("snakemake -s bowtie2 "+args.mapped+" --forceall")
-    #os.system("snakemake -s trinity --cores "+str(args.threads))
+    # Execute Snakemake
     os.system("snakemake -s "+script_dir+"/Snakefile -d "+script_dir+" ../data/output/result_"+readname+".txt --cores "+str(args.threads))
 
 if __name__ == "__main__":
