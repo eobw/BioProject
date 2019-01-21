@@ -74,6 +74,7 @@ GUESSmyLT --reads /home/.../reads.fastq --organism pro --reference /home/.../ref
 ### Optional
 | Parameter | Input | Description |
 | --- | --- | --- |
+| --subsample | Even integer | Number of reads that will be used for subsampling. |
 | --reference | .fa file | Full paths to reference genome/transcriptome for mapping reads to. |
 | --annotation | .gff file | Full path to annotation file for skipping BUSCO step. |
 | --threads | Integer | Number of threads to use. |
