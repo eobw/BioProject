@@ -42,12 +42,18 @@ to display help.
 
 
 ### Supported header formats
+Tested for Old/New Illumina headers and downloads from SRA.
+Should work, but not tested for all fastq header formats at: https://www.ncbi.nlm.nih.gov/sra/docs/submitformats/
+
+### Supported interleaved formats
+If headers are in Old/New Illumina or if reads are alternating.  
+Add example..
 
 ### Example commands
 
-#### Paired end reads and reference
+#### Paired end reads and reference with specified subsampled reads
 ```bash
-GUESSmyLT --reads /home/.../read_1.fastq /home/.../read_2.fastq --organism pro --reference /home/.../ref.fa
+GUESSmyLT --reads /home/.../read_1.fastq /home/.../read_2.fastq --organism pro --reference /home/.../ref.fa --subsample 100000
 ```
 
 #### Only paired end reads eukaryotic
@@ -66,8 +72,8 @@ GUESSmyLT --reads /home/.../reads.fastq --organism pro --reference /home/.../ref
 
 | Parameter | Input | Description |
 | --- | --- | --- |
-| --reads | .fastq file(s) | Full path(s) to RNA-Seq read file(s). For paired end /1 first and /2 second. Order is important. If one file given single end is presumed. |
-| --organism | euk or pro | Eukaryote or prokaryote (euk/pro) is an option needed for the BUSCO anotation. |
+| --reads | .fastq file(s) | Full path(s) to RNA-Seq read file(s). Can be compressed or uncompressed. Order is not important. Can handle two paired end read files, one interleaved read file and single end read file. |
+| --organism | euk or pro | Eukaryote or prokaryote (euk/pro) is an option needed for the BUSCO annotation. |
 
 
 
@@ -78,7 +84,19 @@ GUESSmyLT --reads /home/.../reads.fastq --organism pro --reference /home/.../ref
 | --reference | .fa file | Full paths to reference genome/transcriptome for mapping reads to. |
 | --annotation | .gff file | Full path to annotation file for skipping BUSCO step. |
 | --threads | Integer | Number of threads to use. |
-| --memory | Number of GB ex: 10G | Maximum memory that can can be used in GB. |
+| --memory | Number of GB ex: 10G | Maximum memory that can be used in GB. |
+| --mapped | Sorted .bam file | Full path to mapped read file for skipping Bowtie2 step. NOT DEVELOPED YET. |
+| --output | File path | Full path to result file. NOT DEVELOPED YET. |
 
 ## Known issues
-Spaces in headers
+1) Complains about gzip broken pipe when subsampling with compressed files (but works anyway).  
+2) BUSCO sometimes looses the config path. Fix manually in terminal:
+```bash
+export AUGUSTUS_CONFIG_PATH=~/miniconda3/pkgs/augustus-3.2.3-boost1.60_0/config
+```
+3) BUSCO might not find any core genes. Fix by using more reads or by providing reference.
+
+## TO DO
+1) Handling of --output  
+2) Handling of --mapped  
+3) Subsampling only takes top n reads in .fastq files. Can be improved by selecting reads randomly.  
