@@ -1,12 +1,12 @@
 #!/usr/bin/env python3.6
 # Top script for pipeline of GUESSmyLT.
-# The script handles user arguments, validates inputs, modifies the read files 
+# The script handles user arguments, validates inputs, modifies the read files
 # (if needed) and executes the pipeline by calling Snakemake.
-# 
-# Example runs: 
+#
+# Example runs:
 #   With minimum inputs: python GUESSmyLT.py --reads read1 read2 --organism euk
 #   With some optional inputs: python GUESSmyLT.py --reads read1 read2 --organism euk --threads 10 --memory 5G --reference reference.fasta
-# 
+#
 # For more options type: python GUESSmyLT.py --help
 
 
@@ -15,6 +15,8 @@ from BCBio import GFF
 import pprint
 import gzip
 
+# The path to tool directory. Helps with the relative paths.
+script_dir = os.path.expanduser('~/BioProject/GUESSmyLT')
 
 # ---Function for checking user arguments---
 
@@ -50,7 +52,7 @@ def get_first_line(read):
         with open(read,"r") as f:
             fline=f.readline()
     return fline
-            
+
 
 def check_organism():
     """
@@ -93,19 +95,19 @@ def change_header_format(read,num):
         zip_command="gzip -cd"
     else:
         fixed_header=read+".gz"
-    
+
     fline=get_first_line(read)
     if re.match("^@.+\.\d+\.\d ",fline):
-        os.system(zip_command+" "+read+" | sed '/^@/s/\./:/g; /^@/s/:[0-9] .*/\/"+num+"/g' | gzip > "+tmp)    
-    
+        os.system(zip_command+" "+read+" | sed '/^@/s/\./:/g; /^@/s/:[0-9] .*/\/"+num+"/g' | gzip > "+tmp)
+
     elif re.match("^@.+ ",fline) and "." in fline:
         os.system(zip_command+" "+read+" | sed '/^@/s/\./:/g; /^@/s/ .*/\/"+num+"/g' | gzip > "+tmp)
-        
+
     else:
         os.system(zip_command+" "+read+" | sed '/^@/s/ .*/\/"+num+"/g' | gzip > "+tmp)
-        
+
     os.system("mv "+tmp+" "+fixed_header)
-    return fixed_header    
+    return fixed_header
 
 def check_subsample(num):
     """
@@ -120,17 +122,17 @@ def check_subsample(num):
         print("Error. Number of reads used for subsampling (--subsample) must be even.")
         sys.exit()
 
-        
+
 def subsample(read,num):
     """
-    Selects the num first reads of a fastq files (subsamples) and copies them 
+    Selects the num first reads of a fastq files (subsamples) and copies them
     to a subsampled file.
-    The subsampled file is used throughout the analysis instead of original file. 
-    This makes the run faster and also protects the original read file from being 
-    modified.  
+    The subsampled file is used throughout the analysis instead of original file.
+    This makes the run faster and also protects the original read file from being
+    modified.
     """
     readname=re.split(".fq|.fastq",os.path.basename(read))[0]
-    subsampled="../data/intermediate/"+readname+".sub."+str(num)+".fastq.gz"
+    subsampled=script_dir+"/../data/intermediate/"+readname+".sub."+str(num)+".fastq.gz"
     if os.path.exists(subsampled):
         print("Already found file with "+str(num)+" subsampled reads.")
         print("Subsampled file "+subsampled+" will be used for analysis.")
@@ -141,84 +143,84 @@ def subsample(read,num):
         zip_command="cat"
         if read.endswith(".gz"):
             zip_command="zcat"
-            
+
             # gzip gives broken pipe for compressed files, but works anyway.
         os.system(zip_command+" "+read+" | head -"+num+" | gzip > "+subsampled)
     return subsampled
 
 
 def check_single_reads(read,args):
-    
+
     # --- Inner functions ---
-            
+
     def is_interleaved(read,pattern1,pattern2):
         """
         Function for checking if a single read file is interleaved.
         If both pattern1 and pattern2 can be found in the first 10000 lines,
-        True is returned. Else False. 
+        True is returned. Else False.
         If two read headers are identical, True is returned. Else false.
         """
         if read.endswith(".gz"):
             f=gzip.open(read,"rt")
         else:
-            f=open(read,"r")    
-        
+            f=open(read,"r")
+
         num_read1=0
         num_read2=0
         counter=0
         headers=[]
-        
+
         for line in f:
             counter+=1
             if re.match(pattern1,line):
                 num_read1+=1
             elif re.match(pattern2,line):
                 num_read2+=1
-    
+
             if line.startswith("@"):
                 ID=line.split(" ")[0]
                 if ID in headers:
                     return True
                 else:
-                    headers.append(ID) 
-                    
+                    headers.append(ID)
+
             if counter==10000:
-                break        
+                break
         f.close()
-        
+
         if num_read1>0 and num_read2>0:
             return True
         else:
             return False
-    
-    
+
+
     def deinterleave(read,line):
         """
         Function for deinterleaving reads into two separate files.
-        It first checks for old and new Illumina fastq headers in 
-        order to split files. Otherwise, it assumes that the reads 
-        are alternating and therefore split all odd reads into one 
-        file and all even reads into another file. 
+        It first checks for old and new Illumina fastq headers in
+        order to split files. Otherwise, it assumes that the reads
+        are alternating and therefore split all odd reads into one
+        file and all even reads into another file.
         """
         print("Found interleaved reads in read file: "+read+".")
-        
+
         readname=re.split(".fq|.fastq",os.path.basename(read))[0]
         deinterleaved="../data/intermediate/deinterleaved."+readname+"."
         deinterleaved1=deinterleaved+"left.fastq.gz"
         deinterleaved2=deinterleaved+"right.fastq.gz"
-        
+
         if os.path.exists(deinterleaved1) and os.path.exists(deinterleaved2):
             print("Already found existing deinterleaved files for read file: "+read)
             print("Continuing run with '"+deinterleaved1+"' and '"+deinterleaved2+"'.")
             return deinterleaved1,deinterleaved2
-        
-        
+
+
         print("Deinterleaving data.")
         zip_command="cat"
         if read.endswith(".gz"):
             zip_command="gzip -cd"
-        
-        # Check for Illumina(1.8+) or Illumina(1.8-) fastq format.    
+
+        # Check for Illumina(1.8+) or Illumina(1.8-) fastq format.
         if re.match("^@.+ 1:", line) and re.match("^@.+ 2:",line):
             print("Extracting left reads of '"+read+"' to '"+deinterleaved1+"'.")
             os.system(zip_command+" "+read+" | awk '/^@.*[ ]1:/{c=4} c&&c--' | gzip --stdout > "+deinterleaved1)
@@ -235,27 +237,27 @@ def check_single_reads(read,args):
             #   os.system(paste - - - - - - - - <"""+read+""" | tee >(cut -f 1-4 | tr "\t" "\n" > """+deinterleaved1+""") | cut -f 5-8 | tr "\t" "\n" > """+deinterleaved2)
             # The command works if you execute it from the command line, but not using os.system.
             # Right now, two lines are used, and this part can be optimized.
-            
+
             print("Extracting left reads of '"+read+"' to '"+deinterleaved1+"'.")
             os.system(zip_command+' '+read+' | paste - - - - - - - - | cut -f 1-4 | tr "\t" "\n" | gzip > '+deinterleaved1)
             print("Extracting right reads of '"+read+"' to '"+deinterleaved2+"'.")
             os.system(zip_command+' '+read+' | paste - - - - - - - - | cut -f 5-8 | tr "\t" "\n" | gzip > '+deinterleaved2)
 
-        
+
         return deinterleaved1,deinterleaved2
-    
+
     # --- Outer function ---
-    
+
     # Check that read files exists and can be read
     check_existence(read)
-    
+
     # subsample reads from read file and continue analysis on new, subsampled file.
     read=subsample(read,args.subsample)
     # Get first first line of read file
     fline=get_first_line(read)
-    
-    # Check if read file is interleaved. 
-    # If so we need to split reads (deinterleave) into two files. 
+
+    # Check if read file is interleaved.
+    # If so we need to split reads (deinterleave) into two files.
     if is_interleaved(read,"^@.+/1","^@.+/2") or is_interleaved(read,"^@.+ 1:","^@.+ 2:"):
         # Deinterleaved reads
         read1,read2=deinterleave(read,fline)
@@ -268,7 +270,7 @@ def check_single_reads(read,args):
             print("Reformatting headers of: "+read2)
             read2=change_header_format(read2,2)
         return read1,read2
-    
+
     else:
         # Single read file is not interleaved.
         if " " in fline:
@@ -277,7 +279,7 @@ def check_single_reads(read,args):
             # Convertion is: 'Wrong header format' -> 'readID/pair#'        (pair# = 1 or 2 depending on the mate)
             print("Reformating read headers in fastq file: "+read)
             read=change_header_format(read,1)
-        
+
         return read
 
 
@@ -286,63 +288,63 @@ def check_paired_reads(read1,read2,args):
     Checks that read files exist and are in correct format.
     Updates format of read headers if whitespaces, underscores or punctuations are present.
     """
-    
+
     check_existence(read1)
     check_existence(read2)
-    
+
     check_readfile_extension(read1)
     check_readfile_extension(read2)
-    
+
     # Subsample reads from read file and continue analysis on new, subsampled files.
     # Need to divide with 2 since subsample takes the total amount of reads that will be used.
     args.subsample=int(args.subsample/2)
     read1=subsample(read1,args.subsample)
     read2=subsample(read2,args.subsample)
-    
+
     fline1=get_first_line(read1)
     fline2=get_first_line(read2)
-            
+
     # Check format.
     # Either Illumina1.8+: @<instrument>:<run number>:<flowcell ID>:<lane>:<tile>:<xpos>:<y-pos> <read>:<is filtered>:<control number>:<index>
     # Or Illumina1.8-: @<machine_id>:<lane>:<tile>:<x_coord>:<y_coord>#<index>/<read>
     format="Unknown"
-    
+
     if re.match("^@.+/1",fline1) and re.match("^@.+/2",fline2):
         format="Old Illumina (Illumina1.8-)"
         pass
     elif re.match("^@.+/2",fline1) and re.match("^@.+/1",fline2):
         read1,read2=read2,read1
         format="Old Illumina (Illumina1.8-)"
-    
+
     elif re.match("^@.*\ 1:",fline1) and re.match("^@.*\ 2:",fline2):
         format="New Illumina (Illumina1.8+)"
         pass
     elif re.match("^@.*\ 2:",fline1) and re.match("^@.*\ 1:",fline2):
         format="New Illumina (Illumina1.8+)"
         read1,read2=read2,read1
-        
+
     print("Based on read headers we are working with format: "+format)
-    
+
     if format=="Unknown":
         print("Unknown read header format.")
         print("First line in :"+read1+"\n\t"+fline1)
         print("First line in :"+read2+"\n\t"+fline2)
         print("Assuming left read file: "+ read1+ " and right read file: "+read2)
-        
-        
-    
+
+
+
     if " " in fline1 or " " in fline2 or "." in fline1 or "." in fline2 or "_" in fline1 or "_" in fline2:
         # Reformat headers so that no whitespaces underscores or punctutiations are present.
         # NEEDED since pysam and Trinity cannot handle that format.
-        # Convertion is: 'Wrong header format' -> 'readID/pair#'        (pair# = 1 or 2 depending on the mate)        
+        # Convertion is: 'Wrong header format' -> 'readID/pair#'        (pair# = 1 or 2 depending on the mate)
         print("Reformatting headers of: "+read1)
         read1=change_header_format(read1,1)
         print("Reformatting headers of: "+read2)
         read2=change_header_format(read2,2)
-        
+
     return read1,read2
 
-        
+
 def check_mapped():
     # Not developed yet. Added in to do list.
     print("Checker for mapper has not been developed yet.")
@@ -356,9 +358,9 @@ def check_reference(ref):
     Checks that provided reference is valid according to:
         1. Can be opened.
         2. Has at least one line that begins with '>'.
-    
+
     Also checks if we are dealing with genome or transcriptome by looking at
-    the number of lines that begin with '>'. 
+    the number of lines that begin with '>'.
     If one line begins with '>' we are dealing with genome.
     If more than one line begin with '>' we are dealing with transcriptome.
     """
@@ -400,18 +402,18 @@ def check_memory(args):
         print("Invalid --memory argument: '"+args.memory+"'. Memory should be given in GIGABYTES. For example --memory '4G'")
         sys.exit()
 
-    
+
 # ---Main from here ---
 
 def main():
-    
+
     # Use argparse for handling user arguments.
     # Mandatory arguments are:
     # --organism and --reads
     # Optional arguments are:
     # --reference, --annotation, --mapped (For providing ref, ann, map files).
-    # --threads, --memory (How many threads and maximum memory that GUESSmyLT can use.)   
-    
+    # --threads, --memory (How many threads and maximum memory that GUESSmyLT can use.)
+
     parser=argparse.ArgumentParser(description="GUESSmyLT, GUESS my Library Type. Can predict the library type used for RNA-Seq. The prediction is based on the orientaion of your read files in .fastq format. Knowing the library type helps you with downstream analyses since it greatly improves the assembly.")
     parser._action_groups.pop()
     required=parser.add_argument_group("REQUIRED ARGUMENTS")
@@ -426,13 +428,11 @@ def main():
     optional.add_argument("--threads", type=int, default=10,help="The number of threads that can be used by GUESSmyLT. Needs to be an integer. Defualt value is 10.")
     optional.add_argument("--memory",type=str, default="8G",help="Maximum memory that can be used by GUESSmyLT in GB. E.g. '10G'. Default value is 8G.")
     args=parser.parse_args()
-    
-    # The path to tool directory. Helps with the relative paths.
-    script_dir = os.path.expanduser('~/BioProject/GUESSmyLT')
-    
+
+
     # ---Check subsampling---
     check_subsample(args.subsample)
-    
+
     # ---Check reads---
     # At least one readfile must be provided. (single end or interleaved paired end reads)
     # At most two readiles can be provided. (paired end reads)
@@ -468,9 +468,9 @@ def main():
     if args.mapped and not args.reference:
         print("Error. If a mapping file is provided, the reference used for mapping must also be provided.")
         sys.exit()
-    
+
     # Tells busco what type of reference: genome or transcriptome.
-    # Right now we always tell busco that it's working with a genome, 
+    # Right now we always tell busco that it's working with a genome,
     # because it gives less result files if it is a transcriptome.
     # This could be optimized.
     busco_reference_mode="genome"
@@ -486,7 +486,7 @@ def main():
     else:
         args.mapped="../data/intermediate/"+readname+"_on_ref_"+re.split('/|\.',args.reference)[-2]+"_sorted.bam"
 
-    
+
     if args.annotation:
         check_annotation(args.annotation)
     else:
@@ -497,7 +497,7 @@ def main():
 
 
     # Update config file
-    script_dir="."
+    #script_dir="."
     config_path = script_dir+"/config.json"
     with open(config_path,"r+") as configfile:
         data=json.load(configfile)
