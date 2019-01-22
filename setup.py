@@ -27,7 +27,7 @@ setup(
 print("Trying to download BUSCO datasets from https://busco.ezlab.org")
 print("Checking for eukaroyte dataset:")
 if os.path.exists("data/eukaryota_odb9"):
-    print("Eukatyote dataset seems to exist")
+    print("Eukaryote dataset seems to exist")
 else:
     print("No eukaryote dataset found, downloading...")
     os.system("wget -qO- https://busco.ezlab.org/datasets/eukaryota_odb9.tar.gz | tar xvz -C ./data")
