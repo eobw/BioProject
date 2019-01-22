@@ -12,7 +12,7 @@ Software for Linux to guess the RNA-Seq library type of paired and single end re
 * [Usage](#usage)
   * [File formats](#file-formats)
   * [Supported header formats](#supported-header-formats)
-  * [Supported interleaved formats](#supported-inteleaved-formats)
+  * [Supported interleaved formats](#supported-interleaved-formats)
   * [Example commands](#example-commands)
   * [Output](#output)
   * [Parameters](#parameters)
