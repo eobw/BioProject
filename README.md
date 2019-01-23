@@ -22,6 +22,9 @@ Software for Linux to guess the RNA-Seq library type of paired and single end re
 ## Background
 The choice of RNA-Seq library type defines the read orientation of the sequencing and the order in which the strands of cDNA are sequenced, which means that RNA-Seq reads from different library types can differ significantly. The information regarding library type can be very useful for reads to be assembled into a transcriptome or mapped to a reference assembly. This is because the library type can help to discern where in the transcriptome shorter ambiguous reads belong by using the read’s relative orientation and from which strand it was sequenced. Unfortunately, this information regarding the library type used is not included in sequencing output files and is usually lost before the assembly of the data. Even when working with RNA-Seq data from public repositories there is no guarantee that the library type information is correct or that it exists at all. This is what GUESSmyLT aims to fix by looking at how reads map to a reference and together with gene annotation guess which library was used to generate the data.
 
+## Overview of pipeline
+![alt text](https://github.com/eobw/BioProject/blob/master/Overview_of_GUESSmyLT.png "Pipeline of GUESSmyLT")
+
 ## Prerequisites
 Only developed for Linux systems.
 Python 3:
@@ -83,7 +86,18 @@ Should work, but not tested for all fastq header formats at: https://www.ncbi.nl
 
 ### Supported interleaved formats
 If headers are in Old/New Illumina or if reads are alternating.  
-Add example..
+
+Old Illumina: @HWUSI-EAS100R:6:73:941:1973#0/1  
+New Illumina: @EAS139:136:FC706VJ:2:2104:15343:197393 1:Y:18:ATCACG  
+Alternating:  
+&nbsp; &nbsp; &nbsp; @read1 (first mate)  
+&nbsp; &nbsp; &nbsp; ..  
+&nbsp; &nbsp; &nbsp; @read1 (second mate)  
+&nbsp; &nbsp; &nbsp; ..  
+&nbsp; &nbsp; &nbsp; @read2 (first mate)  
+&nbsp; &nbsp; &nbsp; ..   
+&nbsp; &nbsp; &nbsp; @read2 (second mate)  
+&nbsp; &nbsp; &nbsp; ..  
 
 ### Example commands
 
@@ -145,11 +159,22 @@ GUESSmyLT/data/intermediate/
 ```bash
 export AUGUSTUS_CONFIG_PATH=~/miniconda3/pkgs/augustus-3.2.3-boost1.60_0/config
 ```
-3) BUSCO might not find any core genes. Fix by using more reads or by providing reference.
-4) Mapping, annotation, assembly or the entire pipeline is skipped.  This is most likely due to the fact that Snakemake checks which output files need to be generated and from there only performs the necessary steps of the pipeline. The result of this is that is you already have a .bam file, BUSCO/Trinity output folder or a result .txt file for the reads Snakemake will skip steps
+3) BUSCO might not find any core genes. Fix by using more reads or by providing reference.  
+4) Mapping, annotation, assembly or the entire pipeline is skipped.  This is most likely due to the fact that Snakemake checks which output files need to be generated and from there only performs the necessary steps of the pipeline. The result of this is that is you already have a .bam file, BUSCO/Trinity output folder or a result .txt file for the reads Snakemake will skip steps  
+5) For Linux subsystem on windows, the correct path to GUESSmyLT have to be changed manually. This is done by changing the path of the variable 'script_dir' to the full path of GUESSmyLT. For example: script_dir="/mnt/c/Users/erik_/Documents/GitHub/BioProject/GUESSmyLT"  
 
 ## TO DO
 1) Handling of --output  
-2) Handling of --mapped
+2) Handling of --mapped  
 3) Handling of --annotation  
 4) Subsampling only takes top n reads in .fastq files. Can be improved by selecting reads randomly.  
+5) Make BIOCONDA package for easy access.  
+6) Add test data that check that updates of GUESSmyLT are correct.  
+7) Write Wiki for developers that want to help with this project.  
+8) Optimize BUSCO for transcriptome reference. It is now implemented so that BUSCO always analyses reference with mode 'genome', because otherwise BUSCO genes will not be returned.  
+9) Look more into why some reads get undecided orientation. This is when a read's mate cannot be found and is probably due to a read is at the end of a gene and its mate is outside of the selected region.  
+10) Logging of last step, Inference.  
+
+## Citing 
+If you use GUESSmyLT in your work, please cite us:  
+Add DOI: Berner Wik, E., Olin, H., Vigetun C.
