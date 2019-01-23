@@ -17,6 +17,8 @@ import gzip
 
 # The path to tool directory. Helps with the relative paths.
 script_dir = os.path.expanduser('~/BioProject/GUESSmyLT')
+# IF GUESSmyLT cannot find the correct path, change this manually. e.g.
+# script_dir="/mnt/c/Users/erik_/Documents/GitHub/BioProject/GUESSmyLT"
 
 # ---Function for checking user arguments---
 
@@ -171,19 +173,20 @@ def check_single_reads(read,args):
         headers=[]
 
         for line in f:
+            # Only look at read headers. They come every fourth line.
+            if counter%4==0:
+                if re.match(pattern1,line):
+                    num_read1+=1
+                elif re.match(pattern2,line):
+                    num_read2+=1
+
+                if line.startswith("@"):
+                    ID=line.split(" ")[0]
+                    if ID in headers:
+                        return True
+                    else:
+                        headers.append(ID)
             counter+=1
-            if re.match(pattern1,line):
-                num_read1+=1
-            elif re.match(pattern2,line):
-                num_read2+=1
-
-            if line.startswith("@"):
-                ID=line.split(" ")[0]
-                if ID in headers:
-                    return True
-                else:
-                    headers.append(ID)
-
             if counter==10000:
                 break
         f.close()
@@ -261,7 +264,7 @@ def check_single_reads(read,args):
     if is_interleaved(read,"^@.+/1","^@.+/2") or is_interleaved(read,"^@.+ 1:","^@.+ 2:"):
         # Deinterleaved reads
         read1,read2=deinterleave(read,fline)
-        if " " in get_first_line(read1) or " " in get_first_line(read2):
+        if any(symbol in get_first_line(read1) for symbol in [" ","_","."]) or any(symbol in get_first_line(read2) for symbol in [" ","_","."]):
             # Reformat headers so that no whitespaces underscores or punctutiations are present.
             # NEEDED since pysam and Trinity cannot handle that format.
             # Convertion is: 'Wrong header format' -> 'readID/pair#'        (pair# = 1 or 2 depending on the mate)
@@ -269,18 +272,18 @@ def check_single_reads(read,args):
             read1=change_header_format(read1,1)
             print("Reformatting headers of: "+read2)
             read2=change_header_format(read2,2)
-        return read1,read2
+        return [read1,read2]
 
     else:
         # Single read file is not interleaved.
-        if " " in fline:
+        if any(symbol in fline for symbol in [" ","_","."]):
             # Reformat headers so that no whitespaces underscores or punctutiations are present.
             # NEEDED since pysam and Trinity cannot handle that format.
             # Convertion is: 'Wrong header format' -> 'readID/pair#'        (pair# = 1 or 2 depending on the mate)
             print("Reformating read headers in fastq file: "+read)
             read=change_header_format(read,1)
 
-        return read
+        return [read]
 
 
 def check_paired_reads(read1,read2,args):
