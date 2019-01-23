@@ -39,14 +39,14 @@ b.	Deinterleaves paired end read files if they are interleaved.
 The results are printed as stdout and to a result file. One example of a result would be:
 ```
 Results of library inferring fruit_fly: 
-Library type 	 Reads 	 Percent 
-fr_first 	     4019 	 47.2%
-fr_second 	    4454 	 52.3%
-rf_first 	     21 	   0.2%
-rf_second 	    19 	   0.2%
-ff_first 	     5 	    0.1%
-ff_second 	    2 	    0.0%
-undecided 	    1 	    0.0%
+Library type   Reads   Percent 
+fr_first       4019    47.2%
+fr_second      4454    52.3%
+rf_first       21      0.2%
+rf_second      19      0.2%
+ff_first       5       0.1%
+ff_second      2       0.0%
+undecided      1       0.0%
 ```
 Based on the orientations of the reads we would assume that the library type is fr-unstranded as there is roughly a 50-50 split between fr-first and fr-second.
 
