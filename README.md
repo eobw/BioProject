@@ -5,6 +5,7 @@ Software for Linux to guess the RNA-Seq library type of paired and single end re
 
 * [GUESSmyLT](#GUESSmyLT)
 * [Background](#background)
+* [Overview of pipeline](#Overview of pipeline)
 * [Prerequisites](#Prerequisites)
 * [Installation](#Installation)
   * [Installation with git](#installation-with-git)
@@ -23,7 +24,31 @@ Software for Linux to guess the RNA-Seq library type of paired and single end re
 The choice of RNA-Seq library type defines the read orientation of the sequencing and the order in which the strands of cDNA are sequenced, which means that RNA-Seq reads from different library types can differ significantly. The information regarding library type can be very useful for reads to be assembled into a transcriptome or mapped to a reference assembly. This is because the library type can help to discern where in the transcriptome shorter ambiguous reads belong by using the read’s relative orientation and from which strand it was sequenced. Unfortunately, this information regarding the library type used is not included in sequencing output files and is usually lost before the assembly of the data. Even when working with RNA-Seq data from public repositories there is no guarantee that the library type information is correct or that it exists at all. This is what GUESSmyLT aims to fix by looking at how reads map to a reference and together with gene annotation guess which library was used to generate the data.
 
 ## Overview of pipeline
-![alt text](https://github.com/eobw/BioProject/blob/master/Overview_of_GUESSmyLT.png "Pipeline of GUESSmyLT")
+![alt text](https://github.com/eobw/BioProject/blob/master/Overview_of_GUESSmyLT.png "Pipeline of GUESSmyLT")  
+GUESSmyLT uses Snakemake to build the pipeline it needs in order to predict the library type. Required arguments are organism (euk/pro) and reads (read file(s) in fastq format). Reference (genome or transcriptome in .fasta format) is optional, and if it is not provided, Trinity will first be executed to create a De novo assembly of the reads. Next, BUSCO is used for annotation. This is also a QC step because BUSCO looks for core genes, so called BUSCOs, in the reference. If they cannot be found, it indicates that the reference has bad quality and therefore the pipeline will terminate. If BUSCOs are found, the process continues with mapping the reads to the reference using Bowtie2. The mapping is done with unstranded option so that the reads can be mapped on both the strands and in both directions. Finally, the mapping and annotation is used for inference, which is done with a python script and the library type is returned. 
+On top of Snakemake, we have a python script, GUESSmyLT.py. Its purpose is to handle user arguments by:
+1.	Checking that arguments are correct, files exists and are in correct format.
+2.	Subsamples reads into new read files that are used in the analysis. This makes GUESSmyLT faster and protects the original files from being modified.
+3.	Modifying files:
+a.	Changes read files that are in wrong format. Trinity and Pysam can only handle old Illumina format: @read_ID/pair#, where pair# is 1 or 2. They do not work with whitespaces, punctutations nor undescrores. Therefore, the script makes sure that the headers are converted into the correct format.
+b.	Deinterleaves paired end read files if they are interleaved.
+4.	Telling Snakemake what files exist by updating the config file.
+5.	Executing snakemake.
+
+## Result
+The results are printed as stdout and to a result file. One example of a result would be:
+```
+Results of library inferring fruit_fly: 
+Library type 	 Reads 	 Percent 
+fr_first 	     4019 	 47.2%
+fr_second 	    4454 	 52.3%
+rf_first 	     21 	   0.2%
+rf_second 	    19 	   0.2%
+ff_first 	     5 	    0.1%
+ff_second 	    2 	    0.0%
+undecided 	    1 	    0.0%
+```
+Based on the orientations of the reads we would assume that the library type is fr-unstranded as there is roughly a 50-50 split between fr-first and fr-second.
 
 ## Prerequisites
 Only developed for Linux systems.
