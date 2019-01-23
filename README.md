@@ -202,4 +202,4 @@ export AUGUSTUS_CONFIG_PATH=~/miniconda3/pkgs/augustus-3.2.3-boost1.60_0/config
 
 ## Citing 
 If you use GUESSmyLT in your work, please cite us:  
-Add DOI: Berner Wik, E., Olin, H., Vigetun C.
+Add DOI: Berner Wik, E., Olin, H., Vigetun Haughey C.
