@@ -13,6 +13,7 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 import pysam
+import gzip
 
 # ---------- FUNCTIONS ----------
 
@@ -22,7 +23,7 @@ def extract_genes(run_name):
     Returns a SeqRecord object with one feature per gene.
     '''
 
-    file_tsv = open("../data/intermediate/run_"+run_name+"/full_table_"+run_name+".tsv", 'r')
+    file_tsv = open("data/intermediate/run_"+run_name+"/full_table_"+run_name+".tsv", 'r')
 
     # Extract BUSCO IDs, start and end from table of hits into SeqRecord object, each BUSCO as a SeqFeature
     busco_record = SeqRecord(seq='', id='hits')
@@ -43,7 +44,7 @@ def extract_genes(run_name):
     for busco in busco_record.features:
         filename = busco.id # gff filenames are [busco_id].gff
         try:
-            file_gff = open("../data/intermediate/run_"+run_name+"/augustus_output/gffs/"+filename+".gff")
+            file_gff = open("data/intermediate/run_"+run_name+"/augustus_output/gffs/"+filename+".gff")
             for record in GFF.parse(file_gff, limit_info=limit_infos):
                 gff_records.append(record)
             file_gff.close()
@@ -144,8 +145,9 @@ def infer_single_region(genes):
 
     # Read original read IDs and sequences from the fastq files
     og_reads = {}
-    for record in SeqIO.parse(run_path, "fastq"):
-        og_reads[record.id]= str(record.seq)
+    with gzip.open(run_path, "rt") as handle:
+        for record in SeqIO.parse(handle, "fastq"):
+            og_reads[record.id]= str(record.seq)
 
     # For every gene extract reads that map to gene region and find lib-type
     for gene in genes.features:
@@ -196,7 +198,7 @@ def write_result(lib_dict):
     """
     Function for calculating precentages and writing results of inferring to resultfile.
     """
-    output = open('../data/output/result_'+run_name+'.txt', 'w+')
+    output = open('data/output/result_'+run_name+'.txt', 'w+')
     output.write("Results of library inferring "+run_name+": \nLibrary type \t Reads \t Percent \n")
     print("Results of library inferring: \nLibrary type \t Reads \t Percent \n")
 

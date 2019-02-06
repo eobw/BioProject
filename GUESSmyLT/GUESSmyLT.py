@@ -16,7 +16,8 @@ import pprint
 import gzip
 
 # The path to tool directory. Helps with the relative paths.
-script_dir = os.path.expanduser('~/BioProject/GUESSmyLT')
+script_dir = os.path.dirname(os.path.abspath(__file__)) + "/"
+working_dir = os.getcwd() + "/"
 # IF GUESSmyLT cannot find the correct path, change this manually. e.g.
 # script_dir="/mnt/c/Users/erik_/Documents/GitHub/BioProject/GUESSmyLT"
 
@@ -47,6 +48,7 @@ def get_first_line(read):
     """
     Function for getting the first line of a compressed or uncompressed file.
     """
+    print(read)
     if read.endswith(".gz"):
         with gzip.open(read,"rt") as f:
             fline=f.readline()
@@ -90,7 +92,7 @@ def change_header_format(read,num):
         Wrong header -> readID/num  , where num=1or2
     """
     num=str(num)
-    tmp="../data/intermediate/tmp.gz"
+    tmp=output_dir+"data/intermediate/tmp.gz"
     fixed_header=read
     zip_command="cat"
     if read.endswith(".gz"):
@@ -133,11 +135,13 @@ def subsample(read,num):
     This makes the run faster and also protects the original read file from being
     modified.
     """
+    header_flag = True
     readname=re.split(".fq|.fastq",os.path.basename(read))[0]
-    subsampled=script_dir+"/../data/intermediate/"+readname+".sub."+str(num)+".fastq.gz"
+    subsampled=output_dir+"data/intermediate/"+readname+".sub."+str(num)+".fastq.gz"
     if os.path.exists(subsampled):
         print("Already found file with "+str(num)+" subsampled reads.")
         print("Subsampled file "+subsampled+" will be used for analysis.")
+        header_flag = False
     else:
         print("Subsampling "+str(num)+" reads of "+read+" to new read file: "+subsampled)
         # Multiply with 4 because a read consists of 4 lines in a fastq file.
@@ -148,7 +152,7 @@ def subsample(read,num):
 
             # gzip gives broken pipe for compressed files, but works anyway.
         os.system(zip_command+" "+read+" | head -"+num+" | gzip > "+subsampled)
-    return subsampled
+    return header_flag, subsampled
 
 
 def check_single_reads(read,args):
@@ -208,7 +212,7 @@ def check_single_reads(read,args):
         print("Found interleaved reads in read file: "+read+".")
 
         readname=re.split(".fq|.fastq",os.path.basename(read))[0]
-        deinterleaved="../data/intermediate/deinterleaved."+readname+"."
+        deinterleaved=output_dir+"data/intermediate/deinterleaved."+readname+"."
         deinterleaved1=deinterleaved+"left.fastq.gz"
         deinterleaved2=deinterleaved+"right.fastq.gz"
 
@@ -255,7 +259,7 @@ def check_single_reads(read,args):
     check_existence(read)
 
     # subsample reads from read file and continue analysis on new, subsampled file.
-    read=subsample(read,args.subsample)
+    read=subsample(read,args.subsample)[1]
     # Get first first line of read file
     fline=get_first_line(read)
 
@@ -301,8 +305,8 @@ def check_paired_reads(read1,read2,args):
     # Subsample reads from read file and continue analysis on new, subsampled files.
     # Need to divide with 2 since subsample takes the total amount of reads that will be used.
     args.subsample=int(args.subsample/2)
-    read1=subsample(read1,args.subsample)
-    read2=subsample(read2,args.subsample)
+    header_flag1, read1=subsample(read1,args.subsample)
+    header_flag2, read2=subsample(read2,args.subsample)
 
     fline1=get_first_line(read1)
     fline2=get_first_line(read2)
@@ -335,15 +339,17 @@ def check_paired_reads(read1,read2,args):
         print("Assuming left read file: "+ read1+ " and right read file: "+read2)
 
 
-
-    if " " in fline1 or " " in fline2 or "." in fline1 or "." in fline2 or "_" in fline1 or "_" in fline2:
-        # Reformat headers so that no whitespaces underscores or punctutiations are present.
-        # NEEDED since pysam and Trinity cannot handle that format.
-        # Convertion is: 'Wrong header format' -> 'readID/pair#'        (pair# = 1 or 2 depending on the mate)
-        print("Reformatting headers of: "+read1)
-        read1=change_header_format(read1,1)
-        print("Reformatting headers of: "+read2)
-        read2=change_header_format(read2,2)
+    if header_flag1 and header_flag2:
+        if " " in fline1 or " " in fline2 or "." in fline1 or "." in fline2 or "_" in fline1 or "_" in fline2:
+            # Reformat headers so that no whitespaces underscores or punctutiations are present.
+            # NEEDED since pysam and Trinity cannot handle that format.
+            # Convertion is: 'Wrong header format' -> 'readID/pair#'        (pair# = 1 or 2 depending on the mate)
+            print("Reformatting headers of: "+read1)
+            read1=change_header_format(read1,1)
+            print("Reformatting headers of: "+read2)
+            read2=change_header_format(read2,2)
+    else:
+        print("No header reformatting needed, continuing")
 
     return read1,read2
 
@@ -427,12 +433,19 @@ def main():
     optional.add_argument("--reference",type=str,help="Reference file in .fasta format. Reference can be either transcriptome or genome.")
     optional.add_argument("--annotation",type=str,help="Annotation file in .gff format. Needs to contain genes.")
     optional.add_argument("--mapped",type=str,help="Mapped file in sorted .bam format. Reference that reads have been mapped to has to be provided. Checker for this has not been developed yet. Therefore, do not provide a mapping file.") #Maybe add this?
-    optional.add_argument("--output",type=str,help="The name of your result file. This has not been developed yet. Right know, only a standard name based on your read files is returned as output.")
     optional.add_argument("--threads", type=int, default=10,help="The number of threads that can be used by GUESSmyLT. Needs to be an integer. Defualt value is 10.")
     optional.add_argument("--memory",type=str, default="8G",help="Maximum memory that can be used by GUESSmyLT in GB. E.g. '10G'. Default value is 8G.")
+    optional.add_argument("--output",type=str,default=working_dir,help="Full path to output directory")
     args=parser.parse_args()
 
+    global output_dir
+    output_dir = args.output
+    if not os.path.exists(args.output+"data/intermediate"):
+        os.system("mkdir "+args.output+"data")
+        os.system("mkdir "+args.output+"data/intermediate")
 
+    if not os.path.exists(args.output+"config.json"):
+        os.system("cp "+script_dir+"config.json "+args.output+"config.json")
     # ---Check subsampling---
     check_subsample(args.subsample)
 
@@ -481,19 +494,19 @@ def main():
         busco_reference_mode=check_reference(args.reference)
     else:
         # Add Trinity assembly to config file.
-        args.reference="../data/intermediate/"+readname+".fasta"
+        args.reference="data/intermediate/"+readname+".fasta"
 
 
     if args.mapped:
         check_mapped()
     else:
-        args.mapped="../data/intermediate/"+readname+"_on_ref_"+re.split('/|\.',args.reference)[-2]+"_sorted.bam"
+        args.mapped="data/intermediate/"+readname+"_on_ref_"+re.split('/|\.',args.reference)[-2]+"_sorted.bam"
 
 
     if args.annotation:
         check_annotation(args.annotation)
     else:
-        args.annotation="../data/intermediate/run_"+re.split('/|\.',args.reference)[-2]
+        args.annotation="data/intermediate/run_"+re.split('/|\.',args.reference)[-2]
 
 
     check_memory(args)
@@ -501,7 +514,7 @@ def main():
 
     # Update config file
     #script_dir="."
-    config_path = script_dir+"/config.json"
+    config_path = args.output+"config.json"
     with open(config_path,"r+") as configfile:
         data=json.load(configfile)
         data["trinity"]["reference"]=args.reference
@@ -510,17 +523,18 @@ def main():
         data["busco"]["annotation"]=args.annotation
         data["input"]["organism"]=args.organism
         data["bowtie2"]["mapped-reads"]=args.mapped
-        data["busco"]["lineage"]=("../data/bacteria_odb9" if args.organism == "prokaryote" else "../data/eukaryota_odb9")
+        data["busco"]["lineage"]=data["prokaryote_db"] if args.organism == "prokaryote" else data["eukaryote_db"]
         data["busco"]["mode"]=busco_reference_mode
         data["input"]["threads"]=args.threads
         data["input"]["memory"]=args.memory
         data["output"]=args.output
+        data["script_dir"]=script_dir
         configfile.seek(0)
         json.dump(data,configfile,indent=4)
         configfile.truncate()
 
     # Execute Snakemake
-    os.system("snakemake -s "+script_dir+"/Snakefile -d "+script_dir+" ../data/output/result_"+readname+".txt --cores "+str(args.threads))
+    os.system("snakemake -s "+script_dir+"Snakefile -d "+args.output+" data/output/result_"+readname+".txt --cores "+str(args.threads))
 
 if __name__ == "__main__":
     main()
