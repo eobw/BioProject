@@ -1,0 +1,7 @@
+include GUESSmyLT/bowtie2
+include GUESSmyLT/busco
+include GUESSmyLT/config.json
+include GUESSmyLT/inferr
+include GUESSmyLT/Snakefile
+include GUESSmyLT/trinity
+include GUESSmyLT/inferr_lib.py
