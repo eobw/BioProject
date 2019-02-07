@@ -14,7 +14,8 @@ PE_SE="paired" if len(config["input"]["reads"])==2 else "single"
 rule inferr:
     input:
         config["busco"]["annotation"],
-        config["bowtie2"]["mapped-reads"]
+        config["bowtie2"]["mapped-reads"],
+        'programs.checked'
     output:
         'data/output/result_{readname}.txt'
     shell:

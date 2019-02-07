@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.6
 
 from setuptools import setup, find_packages
-import sys, os, json
+import sys, os, json, subprocess
 
 print("Trying to download BUSCO datasets from https://busco.ezlab.org")
 print("Checking for eukaroyte dataset:")
@@ -39,8 +39,7 @@ setup(
     license='GPL-3.0',
     packages=find_packages(),
 
-    install_requires=['biopython==1.67', 'bcbio-gff==0.6.4', 'pysam==0.15.1', 'snakemake==5.4.0', 'busco==3.0.2'], #Can't get bowtie2 dependency to work
-    dependency_links=['https://github.com/bioconda/bioconda-recipes/tree/master/recipes//busco/meta.yaml', 'https://github.com/bioconda/bioconda-recipes/tree/master/recipes//bowtie2/meta.yaml'],
+    install_requires=['biopython==1.67', 'bcbio-gff==0.6.4', 'pysam==0.15.1', 'snakemake==5.4.0'],
     include_package_data=True,
 
     entry_points={
