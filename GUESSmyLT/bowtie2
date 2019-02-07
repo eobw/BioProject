@@ -14,7 +14,7 @@ def mapping_bowtie2_command():
         raise(Exception("Reads should be paired or single ended."))
 
 # path to index file without extension (removed .fa or .fasta)
-folder = "../data/intermediate/"
+folder = "data/intermediate/"
 index_basename=folder+"index/"+re.split('/|\.',config["trinity"]["reference"])[-2]
 sample=config["input"]["readname"]+"_on_ref_"+re.split('/|\.',config["trinity"]["reference"])[-2]
 

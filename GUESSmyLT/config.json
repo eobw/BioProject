@@ -1,24 +1,27 @@
 {
     "input": {
         "reads": [
-            "../data/input/fly.r1.fastq.gz",
-            "../data/input/fly.r2.fastq.gz"
+            "/home/hampus/gogge/data/intermediate/4_mapped_r1.sub.50000.fastq.gz",
+            "/home/hampus/gogge/data/intermediate/4_mapped_r2.sub.50000.fastq.gz"
         ],
-        "readname": "fly.r1",
+        "readname": "4_mapped_r1.sub.50000",
         "organism": "euk",
         "threads": 10,
         "memory": "8G"
     },
     "bowtie2": {
-        "mapped-reads": "../data/intermediate/fly.r1_on_ref_r1_sorted.bam"
+        "mapped-reads": "data/intermediate/4_mapped_r1.sub.50000_on_ref_4_sorted.bam"
     },
     "busco": {
-        "lineage": "../data/eukaryota_odb9",
+        "lineage": "/home/hampus/BioProject/GUESSmyLT/eukaryota_odb9",
         "mode": "genome",
-        "annotation": "../data/intermediate/run_r1"
+        "annotation": "data/intermediate/run_4"
     },
     "trinity": {
-        "reference": "../data/intermediate/fly.r1.fasta"
+        "reference": "/home/hampus/BioProject/data/input/4.fa"
     },
-    "output": {}
+    "output": "/home/hampus/gogge/",
+    "script_dir": "/home/hampus/BioProject/GUESSmyLT/",
+    "eukaryote_db": "/home/hampus/BioProject/GUESSmyLT/eukaryota_odb9",
+    "prokaryote_db": "/home/hampus/BioProject/GUESSmyLT/bacteria_odb9"
 }

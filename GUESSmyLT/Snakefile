@@ -7,6 +7,8 @@
 #        "../data/intermediate/trinity",
 #        "../data/output/result.txt"
 
+
+include: "check_programs"
 include: "trinity"
 include: "busco"
 include: "bowtie2"
