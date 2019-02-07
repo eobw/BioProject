@@ -1,5 +1,5 @@
 '''
-Snakefile for cheking that required programs can be run.
+Snakefile for checking that required programs can be run.
 Will exit if samtools, bowtie2 or BUSCO can't be run.
 Will warn but not exit if Trinity can't be run
 '''
