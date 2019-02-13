@@ -148,7 +148,7 @@ def subsample(read,num):
         num=str(4*num)
         zip_command="cat"
         if read.endswith(".gz"):
-            zip_command="zcat"
+            zip_command="zcat <"
 
             # gzip gives broken pipe for compressed files, but works anyway.
         os.system(zip_command+" "+read+" | head -"+num+" | gzip > "+subsampled)
@@ -379,7 +379,7 @@ def check_reference(ref):
         print("Error. Cannot open --reference '"+ref+"'. Make sure it exists.")
         sys.exit()
     if ".gz" in ref:
-        zip_command="zcat"
+        zip_command="zcat <"
     else:
         zip_command="cat"
     num_headers=subprocess.check_output(
