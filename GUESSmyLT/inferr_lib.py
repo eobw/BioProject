@@ -198,22 +198,39 @@ def write_result(lib_dict):
     """
     Function for calculating precentages and writing results of inferring to resultfile.
     """
-    output = open('data/output/result_'+run_name+'.txt', 'w+')
-    output.write("Results of library inferring "+run_name+": \nLibrary type \t Reads \t Percent \n")
-    print("Results of library inferring: \nLibrary type \t Reads \t Percent \n")
+    lib_viz = {
+        'fr_first': ["3' ----------<==1== 5'","5' ==2==>---------- 3'" ],
+        'fr_second': ["3' ----------<==2== 5'", "5' ==1==>---------- 3'"],
+        'rf_first': ["3' ----------==1==> 5'","5' <==2==---------- 3'" ],
+        'rf_second': ["3' ----------==2==> 5'","5' <==1==---------- 3'" ],
+        'ff_first': ["3' ----------<==1== 5'","5' <==2==---------- 3'" ],
+        'ff_second': ["3' ----------==2==> 5'","5' ==1==>---------- 3'" ],
+        'f_first': ["3' ----------<==1== 5'","5' ---------------- 3'" ],
+        'f_second': ["3' ---------------- 5'","5' ==1==>---------- 3'" ],
+        'r_first': ["3' ----------==1==> 5'","5' ---------------- 3'" ],
+        'r_second': ["3' ---------------- 5'","5' <==1==---------- 3'" ],
+        'undecided': ["3' -------??------- 5'","5' -------??------- 3'" ]
+    }
+    output = open('data/output/result_'+run_name+'_on_'+reference+'.txt', 'w+')
+    output.write("Results of %s library inferring of reads %s on ref %s: \n\nLibrary type    Reads     Percent     Vizualization according to firststrand\n" % (state, run_name, reference))
+    print("Results of %s library inferring of reads %s on ref %s: \n\nLibrary type    Reads     Percent     Vizualization according to firststrand\n" % (state, run_name, reference))
 
     total_reads = 0
     for i in lib_dict:
         total_reads += lib_dict[i]
+    max_len = max(8, len(str(total_reads)))
+    max_len2 = 52+max_len
     if total_reads > 0:
         for i in lib_dict:
             percent = '{:.1%}'.format(lib_dict[i]/total_reads)
-            output.write("%s \t %d \t %s\n" % (i, lib_dict[i], percent))
-            print("%s \t %d \t %s\n" % (i, lib_dict[i], percent))
+            output.write("%12s %*d %11s %26s\n%*s\n\n" % (i, max_len, lib_dict[i], percent, lib_viz[i][0], max_len2, lib_viz[i][1]))
+            print("%12s %*d %11s %26s\n%*s\n\n" % (i, max_len, lib_dict[i], percent, lib_viz[i][0], max_len2, lib_viz[i][1]))
     else:
         for i in lib_dict:
-            output.write("%s \t %d \t %s\n" % (i, 0, 0))
-            print("%s \t %d \t %s\n" % (i, 0, 0))
+            output.write("%12s %*d %11s %26s\n%*s\n\n" % (i, max_len, 0, 0, lib_viz[i][0], max_len2, lib_viz[i][1]))
+            print("%12s %*d %11s %26s\n%*s\n\n" % (i, max_len, 0, 0, lib_viz[i][0], max_len2, lib_viz[i][1]))
+    output.write("Roughly 50/50 split between the strands of the same library orientation should be interpreted as unstranded.")
+    print("Roughly 50/50 split between the strands of the same library orientation should be interpreted as unstranded.")
 
 # ---------- RUNNING ----------
 
@@ -237,4 +254,4 @@ elif state == 'paired':
 
 print("Prediction finished:\n")
 write_result(result)
-print("Results also written to file data/output/result_"+run_name+".txt")
+print("\nResults also written to file data/output/result_"+run_name+"_on_"+reference+".txt")
