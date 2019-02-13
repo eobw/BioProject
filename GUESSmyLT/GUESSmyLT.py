@@ -477,6 +477,7 @@ def main():
     # Get readname, i.e: readname from path/to/reads/[readname].fq.gz
     # Readname is used to make each run unique.
     readname=re.split(".fq|.fastq",os.path.basename(args.reads[0]))[0]
+    refname=re.split(".fa|.fasta",os.path.basename(args.reference))[0]
 
     # ---Check mapping file---
     # If a mapping file (.bam/.sam) is provided, the reference used for mapping
@@ -534,7 +535,7 @@ def main():
         configfile.truncate()
 
     # Execute Snakemake
-    os.system("snakemake -s "+script_dir+"Snakefile -d "+args.output+" data/output/result_"+readname+".txt --cores "+str(args.threads))
+    os.system("snakemake -s "+script_dir+"Snakefile -d "+args.output+" data/output/result_"+readname+"_on_"+refname+".txt --cores "+str(args.threads))
 
 if __name__ == "__main__":
     main()

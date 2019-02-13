@@ -17,6 +17,6 @@ rule inferr:
         config["bowtie2"]["mapped-reads"],
         'programs.checked'
     output:
-        'data/output/result_{readname}.txt'
+        'data/output/result_{readname}_on_{reference}.txt'
     shell:
         "python {script_dir}/inferr_lib.py {reference}  {mapped_reads} {readname} {readpath} {PE_SE} "
