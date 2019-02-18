@@ -9,7 +9,7 @@
 
 
 configfile: "config.json"
-folder = "data/intermediate/"
+folder = "intermediate_data/"
 readname=config["input"]["readname"]
 
 mode = config["busco"]["mode"]

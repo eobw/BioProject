@@ -1,5 +1,9 @@
 {
     "input": {
+        "to_subsample": [
+            "",
+            ""
+        ],
         "reads": [
             "/home/hampus/gogge/data/intermediate/4_mapped_r1.sub.50000.fastq.gz",
             "/home/hampus/gogge/data/intermediate/4_mapped_r2.sub.50000.fastq.gz"
@@ -20,6 +24,7 @@
     "trinity": {
         "reference": "/home/hampus/BioProject/data/input/4.fa"
     },
+    "subsample": 50000,
     "output": "/home/hampus/gogge/",
     "script_dir": "/home/hampus/BioProject/GUESSmyLT/",
     "eukaryote_db": "/home/hampus/BioProject/GUESSmyLT/eukaryota_odb9",

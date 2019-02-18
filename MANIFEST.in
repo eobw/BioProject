@@ -6,3 +6,4 @@ include GUESSmyLT/Snakefile
 include GUESSmyLT/trinity
 include GUESSmyLT/inferr_lib.py
 include GUESSmyLT/check_programs
+include GUESSmyLT/subsample

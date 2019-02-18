@@ -23,7 +23,7 @@ def extract_genes(run_name):
     Returns a SeqRecord object with one feature per gene.
     '''
 
-    file_tsv = open("data/intermediate/run_"+run_name+"/full_table_"+run_name+".tsv", 'r')
+    file_tsv = open("intermediate_data/run_"+run_name+"/full_table_"+run_name+".tsv", 'r')
 
     # Extract BUSCO IDs, start and end from table of hits into SeqRecord object, each BUSCO as a SeqFeature
     busco_record = SeqRecord(seq='', id='hits')
@@ -44,7 +44,7 @@ def extract_genes(run_name):
     for busco in busco_record.features:
         filename = busco.id # gff filenames are [busco_id].gff
         try:
-            file_gff = open("data/intermediate/run_"+run_name+"/augustus_output/gffs/"+filename+".gff")
+            file_gff = open("intermediate_data/run_"+run_name+"/augustus_output/gffs/"+filename+".gff")
             for record in GFF.parse(file_gff, limit_info=limit_infos):
                 gff_records.append(record)
             file_gff.close()
@@ -211,7 +211,7 @@ def write_result(lib_dict):
         'r_second': ["3' ---------------- 5'","5' <==1==---------- 3'" ],
         'undecided': ["3' -------??------- 5'","5' -------??------- 3'" ]
     }
-    output = open('data/output/result_'+run_name+'_on_'+reference+'.txt', 'w+')
+    output = open('result_'+run_name+'_on_'+reference+'.txt', 'w+')
     output.write("Results of %s library inferring of reads %s on ref %s: \n\nLibrary type    Reads     Percent     Vizualization according to firststrand\n" % (state, run_name, reference))
     print("Results of %s library inferring of reads %s on ref %s: \n\nLibrary type    Reads     Percent     Vizualization according to firststrand\n" % (state, run_name, reference))
 
@@ -254,4 +254,4 @@ elif state == 'paired':
 
 print("Prediction finished:\n")
 write_result(result)
-print("\nResults also written to file data/output/result_"+run_name+"_on_"+reference+".txt")
+print("\nResults also written to file result_"+run_name+"_on_"+reference+".txt")

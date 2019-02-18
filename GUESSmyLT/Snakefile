@@ -1,14 +1,15 @@
-# Execute with: snakemake ../data/intermediate/[run_name]_sorted.bam ../data/intermediate/run_[run_name] ../data/output/result_[run_name].txt
+# Execute with: snakemake ../intermediate_data/[run_name]_sorted.bam ../intermediate_data/run_[run_name] ../data/output/result_[run_name].txt
 
 #rule all:
 #    input:
-#        "../data/intermediate/{sample}_sorted.bam",
-#        "../data/intermediate/run_{sample}",
-#        "../data/intermediate/trinity",
+#        "../intermediate_data/{sample}_sorted.bam",
+#        "../intermediate_data/run_{sample}",
+#        "../intermediate_data/trinity",
 #        "../data/output/result.txt"
 
 
 include: "check_programs"
+include: "subsample"
 include: "trinity"
 include: "busco"
 include: "bowtie2"

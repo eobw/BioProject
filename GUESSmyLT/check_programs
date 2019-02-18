@@ -8,7 +8,7 @@ import time
 rule check_programs:
     output:
         touch("programs.checked")
-    priority: 1
+    priority: 2
     run:
         try:
             print("Checking for bowtie2, upon error make sure it's installed properly")

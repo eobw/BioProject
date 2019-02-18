@@ -1,5 +1,5 @@
 # Need samtools and bowtie2 in path to work.
-# Execute with command: snakemake -s bowtie2 ../data/intermediate/[run_name]_sorted.bam
+# Execute with command: snakemake -s bowtie2 ../intermediate_data/[run_name]_sorted.bam
 
 import re
 configfile: "config.json"
@@ -14,7 +14,7 @@ def mapping_bowtie2_command():
         raise(Exception("Reads should be paired or single ended."))
 
 # path to index file without extension (removed .fa or .fasta)
-folder = "data/intermediate/"
+folder = "intermediate_data/"
 index_basename=folder+"index/"+re.split('/|\.',config["trinity"]["reference"])[-2]
 sample=config["input"]["readname"]+"_on_ref_"+re.split('/|\.',config["trinity"]["reference"])[-2]
 
@@ -37,7 +37,7 @@ rule bowtie2_map:
         expand(index_basename+".{index}.bt2", index=range(1,5)),
         expand(index_basename+".rev.{index}.bt2", index=range(1,3)),
         # Read files
-        config["input"]["reads"]
+        rules.subsample.output
     output:
         #folder+"{sample}_sorted.bam"
         folder+sample+"_sorted.bam"
