@@ -1,9 +1,9 @@
 # Snakefile for ruuning the inferringscript 'inferr.py' which figures out the library-type
-
+import re, os
 script_dir=os.path.dirname(__file__)
 configfile: "config.json"
 folder = "intermediate_data/"
-reference=re.split('/|\.',config["trinity"]["reference"])[-2]
+reference=re.split(".fa|.fasta",os.path.basename(config["trinity"]["reference"]))[0]
 mapped_reads=config["bowtie2"]["mapped-reads"]
 readname=config["input"]["readname"]
 readpath=config["input"]["reads"][0]

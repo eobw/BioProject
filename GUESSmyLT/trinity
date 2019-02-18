@@ -14,9 +14,9 @@ readname=config["input"]["readname"]
 
 rule trinity:
     input:
-        config["input"]["reads"]
+        rules.subsample.output
     output:
-        trinitydir=directory("/intermediate_data/trinity"),
+        trinitydir=directory("intermediate_data/trinity"),
         renamed="intermediate_data/"+readname+".fasta"
     params:
         memory=config["input"]["memory"]
@@ -32,5 +32,5 @@ rule trinity:
         --CPU {threads} \
         --output {output.trinitydir} \
         | tee {log}")
-        shell("mv /intermediate_data/trinity/Trinity.fasta {output.renamed}")
+        shell("mv intermediate_data/trinity/Trinity.fasta {output.renamed}")
         shell("echo Renamed $(dirname $PWD)/intermediate_data/trinity/Trinity.fasta to $(dirname $PWD)/intermediate_data/"+readname+".fasta | tee --append {log}")

@@ -9,20 +9,15 @@
 #
 # For more options type: python GUESSmyLT.py --help
 
-
 import argparse, sys, json, os, re, subprocess
 from BCBio import GFF
 
-# The path to tool directory. Helps with the relative paths.
+# The path to the directory where the script is executed.
 script_dir = os.path.dirname(os.path.abspath(__file__)) + "/"
+# Working dir, where files will be written if no --ouput arg given
 working_dir = os.getcwd() + "/"
-# IF GUESSmyLT cannot find the correct path, change this manually. e.g.
-# script_dir="/mnt/c/Users/erik_/Documents/GitHub/BioProject/GUESSmyLT"
 
-# ---Function for checking user arguments---
-
-
-
+# ---Functions for checking user arguments---
 
 def check_organism():
     """
@@ -145,11 +140,11 @@ def main():
     required.add_argument("--reads",nargs="+",type=str,help="One or two read files in .fastq format. Files can be compressed or uncrompressed. Handles interleaved read files and any known .fastq header format. ")
     optional.add_argument("--subsample",type=int,default=100000,help="Number of subsampled reads that will be used for analysis. Must be an even number. Default value is 100,000 reads.")
     optional.add_argument("--reference",type=str,help="Reference file in .fasta format. Reference can be either transcriptome or genome.")
-    optional.add_argument("--annotation",type=str,help="Annotation file in .gff format. Needs to contain genes.")
+    optional.add_argument("--annotation",type=str,help="Annotation file in .gff format. Needs to contain genes. Not implemented yet.")
     optional.add_argument("--mapped",type=str,help="Mapped file in sorted .bam format. Reference that reads have been mapped to has to be provided. Checker for this has not been developed yet. Therefore, do not provide a mapping file.") #Maybe add this?
     optional.add_argument("--threads", type=int, default=10,help="The number of threads that can be used by GUESSmyLT. Needs to be an integer. Defualt value is 10.")
     optional.add_argument("--memory",type=str, default="8G",help="Maximum memory that can be used by GUESSmyLT in GB. E.g. '10G'. Default value is 8G.")
-    optional.add_argument("--output",type=str,default=working_dir,help="Full path to output directory")
+    optional.add_argument("--output",type=str,default=working_dir,help="Full path to output directory. Default is working directory.")
     args=parser.parse_args()
 
     global output_dir
@@ -157,7 +152,7 @@ def main():
     if not os.path.exists(args.output+"intermediate_data"):
         os.system("mkdir "+args.output+"intermediate_data")
 
-    # Copy the config file from the script directory (install or git clone dir)
+    # Copy the snakemake config file from the script directory (install or git clone dir)
     if not os.path.exists(args.output+"config.json"):
         os.system("cp "+script_dir+"config.json "+args.output+"config.json")
     # ---Check subsampling---
@@ -166,8 +161,6 @@ def main():
     # ---Check reads---
     # At least one readfile must be provided. (single end or interleaved paired end reads)
     # At most two readiles can be provided. (paired end reads)
-    #
-    # Check if readfile is provided.
     readname1=""
     readname2=""
     subsampled_names = []
@@ -186,11 +179,6 @@ def main():
         print("Error. Too many read files. Only one or two read files can be provided.")
         sys.exit()
 
-    # After reads have been checked, they are sorted so that read[1/left/forward] is first and read[2/right/reverse] is second.
-    # Base readname on first read:
-    # Get readname, i.e: readname from path/to/reads/[readname].fq.gz
-    # Readname is used to make each run unique.
-    refname=re.split(".fa|.fasta",os.path.basename(args.reference))[0]
 
     # ---Check mapping file---
     # If a mapping file (.bam/.sam) is provided, the reference used for mapping
@@ -210,6 +198,12 @@ def main():
         # Add Trinity assembly to config file.
         args.reference="intermediate_data/"+readname1+".fasta"
 
+    # After reads have been checked, they are sorted so that read[1/left/forward] is first and read[2/right/reverse] is second.
+    # Base readname on first read:
+    # Get readname, i.e: readname from path/to/reads/[readname].fq.gz
+    # Readname is used to make each run unique.
+    refname=re.split(".fa|.fasta",os.path.basename(args.reference))[0]
+
 
     if args.mapped:
         check_mapped()
@@ -218,16 +212,17 @@ def main():
 
 
     if args.annotation:
+        print("Inputting annotation files not implemeted yet. Exiting...")
+        sys.exit()
         check_annotation(args.annotation)
     else:
-        args.annotation="intermediate_data/run_"+re.split('/|\.',args.reference)[-2]
+        args.annotation="intermediate_data/run_"+refname
 
 
     check_memory(args)
 
 
-    # Update config file
-    #script_dir="."
+    # Update snakemake config file
     config_path = args.output+"config.json"
     with open(config_path,"r+") as configfile:
         data=json.load(configfile)

@@ -6,7 +6,7 @@
 # make sure augustus config is in path by:
 # export AUGUSTUS_CONFIG_PATH=/path/to/augustus/config
 # e.g. export AUGUSTUS_CONFIG_PATH=~/miniconda3/pkgs/augustus-3.2.3-boost1.60_0/config
-
+import re, os
 
 configfile: "config.json"
 folder = "intermediate_data/"
@@ -15,7 +15,7 @@ readname=config["input"]["readname"]
 mode = config["busco"]["mode"]
 lineage = config["busco"]["lineage"]
 # path to index file without extension (removed .fa or .fasta)
-ref_name=re.split('/|\.',config["trinity"]["reference"])[-2]
+ref_name=re.split(".fa|.fasta",os.path.basename(config["trinity"]["reference"]))[0]
 rule busco_ann:
     input:
         config["trinity"]["reference"]
