@@ -73,7 +73,8 @@ Library type    Reads     Percent     Vizualization according to firststrand
 
 Roughly 50/50 split between the strands of the same library orientation should be interpreted as unstranded.
 
-```bash
+```
+
 Based on the orientations of the reads we would assume that the library type is fr-unstranded as there is roughly a 50-50 split between fr-first and fr-second.
 
 ## Prerequisites
