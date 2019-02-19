@@ -149,6 +149,8 @@ def main():
 
     global output_dir
     output_dir = args.output
+    if not os.path.exists(args.output):
+        os.system("mkdir "+args.output)
     if not os.path.exists(args.output+"intermediate_data"):
         os.system("mkdir "+args.output+"intermediate_data")
 

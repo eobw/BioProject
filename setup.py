@@ -44,6 +44,7 @@ setup(
 
     entry_points={
         'console_scripts': ['GUESSmyLT = GUESSmyLT.GUESSmyLT:main',
+        'GUESSmyLT-example = example_run.example:main',
         ],
     }
 )
