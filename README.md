@@ -124,6 +124,11 @@ GUESSmyLT -h
 
 to display help.
 
+There is also an example run that takes roughly 5 mins. A folder called GUESSmyLT_example_out will be created in the working directory:
+```bash
+GUESSmyLT-example
+```
+
 ## Usage
 
 ### File formats
@@ -215,7 +220,7 @@ export AUGUSTUS_CONFIG_PATH=~/miniconda3/pkgs/augustus-3.2.3-boost1.60_0/config
 4) Mapping, annotation, assembly or the entire pipeline is skipped.  This is most likely due to the fact that Snakemake checks which output files need to be generated and from there only performs the necessary steps of the pipeline. The result of this is that is you already have a .bam file, BUSCO/Trinity output folder or a result .txt file for the reads Snakemake will skip steps  
 5) Installing Trinity for mac via Conda will give you a version from 2011 that doesn't work. Install using Homebrew instead.
 ## TO DO
-1) Handling of --output_name for specifying output name 
+1) Handling of --output_name for specifying output name
 2) Handling of --mapped  
 3) Handling of --annotation  
 4) Subsampling only takes top n reads in .fastq files. Can be improved by selecting reads randomly.  
