@@ -1,7 +1,6 @@
 #!/usr/bin/env python3.6
 # Top script for pipeline of GUESSmyLT.
-# The script handles user arguments, validates inputs, modifies the read files
-# (if needed) and executes the pipeline by calling Snakemake.
+# The script handles user arguments, validates inputs and executes the pipeline by calling Snakemake.
 #
 # Example runs:
 #   With minimum inputs: python GUESSmyLT.py --reads read1 read2 --organism euk
@@ -181,7 +180,6 @@ def main():
         print("Error. Too many read files. Only one or two read files can be provided.")
         sys.exit()
 
-
     # ---Check mapping file---
     # If a mapping file (.bam/.sam) is provided, the reference used for mapping
     # must also be provided.
@@ -200,18 +198,13 @@ def main():
         # Add Trinity assembly to config file.
         args.reference="intermediate_data/"+readname1+".fasta"
 
-    # After reads have been checked, they are sorted so that read[1/left/forward] is first and read[2/right/reverse] is second.
-    # Base readname on first read:
-    # Get readname, i.e: readname from path/to/reads/[readname].fq.gz
-    # Readname is used to make each run unique.
+    # Get refname from the path, basis for name of BUSCO run
     refname=re.split(".fa|.fasta",os.path.basename(args.reference))[0]
-
 
     if args.mapped:
         check_mapped()
     else:
         args.mapped="intermediate_data/"+readname1+"_on_ref_"+re.split('/|\.',args.reference)[-2]+"_sorted.bam"
-
 
     if args.annotation:
         print("Inputting annotation files not implemeted yet. Exiting...")
@@ -220,9 +213,7 @@ def main():
     else:
         args.annotation="intermediate_data/run_"+refname
 
-
     check_memory(args)
-
 
     # Update snakemake config file
     config_path = args.output+"config.json"
