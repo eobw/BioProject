@@ -213,10 +213,9 @@ export AUGUSTUS_CONFIG_PATH=~/miniconda3/pkgs/augustus-3.2.3-boost1.60_0/config
 ```
 3) BUSCO might not find any core genes. Fix by using more reads or by providing reference.  
 4) Mapping, annotation, assembly or the entire pipeline is skipped.  This is most likely due to the fact that Snakemake checks which output files need to be generated and from there only performs the necessary steps of the pipeline. The result of this is that is you already have a .bam file, BUSCO/Trinity output folder or a result .txt file for the reads Snakemake will skip steps  
-5) For Linux subsystem on windows, the correct path to GUESSmyLT have to be changed manually. This is done by changing the path of the variable 'script_dir' to the full path of GUESSmyLT. For example: script_dir="/mnt/c/Users/erik_/Documents/GitHub/BioProject/GUESSmyLT"  
-
+5) Installing Trinity for mac via Conda will give you a version from 2011 that doesn't work. Install using Homebrew instead.
 ## TO DO
-1) Handling of --output_name  
+1) Handling of --output_name for specifying output name 
 2) Handling of --mapped  
 3) Handling of --annotation  
 4) Subsampling only takes top n reads in .fastq files. Can be improved by selecting reads randomly.  
